@@ -68,7 +68,7 @@ export async function getBrowser(): Promise<Browser> {
     return g.__browser;
   } catch (e) {
     console.error('Falha ao iniciar o Chromium:', (e as Error).message);
-    throw new HttpError(503, 'Geração de PDF indisponível: instale o Chromium (npm run browsers:install) ou defina CHROMIUM_PATH.');
+    throw new Error('Chromium não disponível');
   }
 }
 
