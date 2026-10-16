@@ -187,8 +187,8 @@ export default function ChecklistForm({ id }: { id: string }) {
       if (!(await flush())) throw new ApiError(0, 'Falha ao salvar antes de finalizar.');
       await api.post<Checklist>(`/checklists/${id}/finalize`);
       setConfirmFinalizeOpen(false);
-      // Salvo e finalizado — redireciona automaticamente para a lista
-      router.push('/checklists');
+      // Salvo e finalizado — redireciona automaticamente para o painel de novo checklist
+      router.push('/checklists/new');
     } catch (e) {
       if (e instanceof ApiError && e.body?.errors) { setErrors(e.body.errors); setShowErrors(true); }
       flash('err', e instanceof ApiError ? e.message : 'Erro ao finalizar.');
