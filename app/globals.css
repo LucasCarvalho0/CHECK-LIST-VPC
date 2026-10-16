@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background: #f1f3f5;
+  color: #1f2933;
+  font-family: 'Inter', system-ui, sans-serif;
+  /* Prevent iOS text size adjustment */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Inputs & selects — larger tap targets on touch */
+input, select, textarea {
+  @apply rounded border border-slate-300 bg-white px-2 py-1.5 text-sm w-full;
+  /* Minimum 44px touch target on tablet/mobile */
+  min-height: 2.75rem;
+}
+input:focus, select:focus, textarea:focus { @apply outline-none ring-2 ring-sky-400; }
+input:disabled, select:disabled, textarea:disabled { @apply bg-slate-100 text-slate-500; }
+button:focus-visible, a:focus-visible { @apply outline-none ring-2 ring-sky-400; }
+
+/* Prevent horizontal overflow on all screens */
+*, *::before, *::after { box-sizing: border-box; }
+body { overflow-x: hidden; }
+
+/* Smooth scrolling for tab navigation */
+html { scroll-behavior: smooth; }
+

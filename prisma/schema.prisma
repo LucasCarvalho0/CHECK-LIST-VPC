@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+enum Shift {
+  FIRST
+  SECOND
+}
+
+enum ChecklistStatus {
+  IN_PROGRESS
+  FINALIZED
+  CANCELED
+}
+
+enum ItemResponse {
+  OK
+  NOK
+  NA
+  UNANSWERED
+}
+
+enum AuditResult {
+  APPROVED
+  REPROVED
+}
+
+enum RepairStatus {
+  OK
+  NOK
+  NOT_APPLICABLE
+}
+
+enum AuditAction {
+  CREATE
+  FINALIZE
+  CANCEL
+  CORRECTION
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  username     String   @unique
+  passwordHash String
+  role         Role     @default(OPERATOR)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  checklists Checklist[]
+  auditLogs  AuditLog[]
+}
+
+// Convenção de datas: checklistDate/repairDate são datas de calendário (DATE, sem fuso).
+// checklistTime/repairTime são "HH:mm" no horário local da planta (APP_TIMEZONE).
+// createdAt/updatedAt/finalizedAt são instantes (UTC).
+model Checklist {
+  id                       String          @id @default(uuid())
+  vehicleVersion           String?
+  chassis                  String
+  checklistDate            DateTime        @db.Date
+  checklistTime            String
+  shift                    Shift?
+  inspectorQA              String?
+  leaderVPC                String?
+  bpc                      String?
+  firmwareVersion          String?
+  canbusVersion            String?
+  auditResult              AuditResult?
+  nonConformityDescription String?
+  repairStatus             RepairStatus?
+  repairObservation        String?
+  repairInspectorQA        String?
+  repairLeaderVPC          String?
+  repairDate               DateTime?       @db.Date
+  repairTime               String?
+  status                   ChecklistStatus @default(IN_PROGRESS)
+  createdById              String
+  createdBy                User            @relation(fields: [createdById], references: [id])
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  finalizedAt              DateTime?
+  canceledAt               DateTime?
+  cancelReason             String?
+  deletedAt                DateTime?
+
+  responses ChecklistItemResponse[]
+  auditLogs AuditLog[]
+
+  @@index([chassis])
+  @@index([checklistDate, shift])
+  @@index([checklistDate, checklistTime])
+  @@index([status])
+  @@index([auditResult])
+}
+
+model ChecklistItemResponse {
+  id                String       @id @default(uuid())
+  checklistId       String
+  checklist         Checklist    @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  itemCode          String
+  section           String
+  itemLabelSnapshot String
+  response          ItemResponse @default(UNANSWERED)
+  observation       String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@unique([checklistId, itemCode])
+  @@index([checklistId])
+  @@index([itemCode, response])
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  checklistId String
+  checklist   Checklist   @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  action      AuditAction
+  changes     Json
+  createdAt   DateTime    @default(now())
+
+  @@index([checklistId])
+  @@index([userId])
+  @@index([createdAt])
+}

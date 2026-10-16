@@ -1,0 +1,3 @@
+Coloque aqui o logotipo Nissan extraído das imagens do formulário original com o nome:
+    nissan-logo.png   (ou .jpg / .svg, e ajuste LOGO_PATH no .env)
+Enquanto o arquivo não existir, o PDF mostra uma caixa "LOGO NISSAN" no lugar do logotipo.
