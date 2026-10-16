@@ -1,0 +1,57 @@
+{
+  "name": "Nissan Checklist Multimídia",
+  "short_name": "Nissan QA",
+  "description": "Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - Nissan",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#C3002F",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo Checklist",
+      "short_name": "Novo",
+      "description": "Iniciar uma nova inspeção de multimídia",
+      "url": "/checklists/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Imprimir / Relatórios",
+      "short_name": "Imprimir",
+      "description": "Consultar e imprimir checklists do dia",
+      "url": "/print",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

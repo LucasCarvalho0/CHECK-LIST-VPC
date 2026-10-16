@@ -17,7 +17,7 @@ const brDate = (d?: string | null) => (d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d
 const monthYear = (d?: string | null) => (d && /^\d{4}-\d{2}/.test(d) ? `${d.slice(5, 7)}/${d.slice(0, 4)}` : '10/2026');
 
 /** □ vazio ou X marcado */
-const box = (checked: boolean) => `<span class="chk">${checked ? 'X' : '&nbsp;'}</span>`;
+const box = (checked: boolean) => `<span class="box">${checked ? 'X' : '&nbsp;'}</span>`;
 
 export const CSS = `
 @page { size: A4 portrait; margin: 0; }
@@ -25,14 +25,14 @@ export const CSS = `
 html, body { margin: 0; padding: 0; background: #fff; }
 body {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 9pt;
+  font-size: 8.5pt;
   color: #000;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 
 /* ── PÁGINA ── */
-.pg {
+.page {
   position: relative;
   width: 210mm;
   min-height: 297mm;
@@ -42,22 +42,22 @@ body {
   page-break-after: always;
   break-after: page;
 }
-.pg:last-child { page-break-after: auto; break-after: auto; }
+.page:last-child { page-break-after: auto; break-after: auto; }
 
 /* ── CABEÇALHO ── */
 .hd { text-align: center; margin-bottom: 2mm; }
-.hd img { height: 12mm; width: auto; display: inline-block; }
+.hd img { height: 11mm; width: auto; display: inline-block; }
 .logo-ph { display: inline-block; border: 0.3mm dashed #888; padding: 2mm 8mm; font-weight: bold; font-size: 10pt; }
-.hd-line { border: none; border-top: 0.6mm solid #000; margin: 2mm 0 3mm; }
+.hd-line { border: none; border-top: 1.2px solid #000; margin: 2.5mm 0 3.5mm; }
 
-/* ── TÍTULO ── */
+/* ── TÍTULO DO DOCUMENTO ── */
 .doc-title {
   text-align: center;
   font-weight: bold;
   font-size: 10.5pt;
-  margin: 0 0 4mm;
+  margin: 0 0 3.5mm;
   text-transform: uppercase;
-  letter-spacing: 0.05mm;
+  letter-spacing: 0.1mm;
 }
 
 /* ── TÍTULOS DE SEÇÃO ── */
@@ -65,8 +65,9 @@ body {
   font-weight: bold;
   font-size: 9.5pt;
   text-align: center;
-  margin: 4mm 0 1.5mm;
+  margin: 4.5mm 0 2mm;
   text-transform: uppercase;
+  letter-spacing: 0.05mm;
 }
 
 /* ── TABELAS ── */
@@ -76,70 +77,92 @@ table {
   table-layout: fixed;
 }
 th, td {
-  border: 0.3mm solid #555;
-  padding: 1.5mm 2mm;
+  border: 0.3mm solid #d0d0d0;
+  padding: 1.5mm 2.2mm;
   vertical-align: middle;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 th {
-  background-color: #d8d8d8;
+  background-color: #f5f5f5;
   font-weight: bold;
-  font-size: 9pt;
+  font-size: 8.5pt;
   text-align: center;
+  white-space: nowrap;
 }
-td { font-size: 8.5pt; }
+td { font-size: 8pt; }
 td.cc { text-align: center; }
-td.gr { background-color: #ebebeb; }
+td.gr { background-color: #f5f5f5; }
 
-/* linhas de itens: altura mínima fixa */
-tr.it td { height: 7mm; }
+/* linhas de itens com altura padrão */
+tr.item td { height: 6.8mm; }
 
 /* ── CHECKBOX QUADRADO ── */
-.chk {
+.box {
   display: inline-block;
-  width: 4mm;
-  height: 4mm;
-  border: 0.35mm solid #000;
+  width: 3.8mm;
+  height: 3.8mm;
+  border: 0.35mm solid #333;
   text-align: center;
-  line-height: 3.7mm;
-  font-size: 8pt;
+  line-height: 3.5mm;
+  font-size: 7.5pt;
   font-weight: bold;
   vertical-align: middle;
   background: #fff;
 }
 
-/* ── TURNO / INLINE OPTIONS ── */
-.iopt { display: inline-block; margin-right: 6mm; white-space: nowrap; }
+/* ── OPÇÕES INLINE ── */
+.iopt { display: inline-block; margin-right: 5mm; white-space: nowrap; font-size: 8.5pt; }
+
+/* ── DIVISÓRIA HORIZONTAL ENTRE SEÇÕES ── */
+.sec-divider {
+  border: none;
+  border-top: 0.8px solid #bbb;
+  margin: 4mm 0 2mm;
+}
 
 /* ── RESULTADO AUDITORIA ── */
 .audit-row {
   text-align: center;
-  font-size: 9.5pt;
+  font-size: 9pt;
   font-weight: bold;
-  margin: 4mm 0;
+  margin: 4mm 0 3mm;
 }
-.audit-row .iopt { margin: 0 10mm; font-size: 9.5pt; }
+.audit-row .iopt { margin: 0 8mm; font-size: 9pt; }
 
 /* ── NÃO CONFORMIDADE ── */
-.nc-label { font-size: 8.5pt; margin: 3mm 0 1.5mm; }
-.nc-line  { border-bottom: 0.3mm solid #888; height: 6.5mm; margin-bottom: 2mm; }
-
-/* ── SEPARADOR ── */
-.sep { border: none; border-top: 0.5mm solid #aaa; margin: 3.5mm 0; }
+.nc-section { margin-top: 2mm; margin-bottom: 3.5mm; }
+.nc-label { font-size: 8pt; margin-bottom: 2mm; }
+.nc-line {
+  border-bottom: 0.35mm solid #888;
+  height: 6mm;
+  line-height: 6mm;
+  font-size: 7.5pt;
+  margin-bottom: 2.5mm;
+  padding-left: 1mm;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.obs-wrap {
+  max-height: 5.5mm;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.2;
+}
 
 /* ── RODAPÉ ── */
 .ft {
   position: absolute;
   left: 15mm; right: 15mm; bottom: 6mm;
   text-align: center;
-  font-size: 8pt;
-  line-height: 1.5;
+  font-size: 7.5pt;
+  line-height: 1.4;
 }
-.ft-red { color: #C3002F; }
+.ft-red { color: #C3002F; font-weight: 500; }
 `;
 
-/* ─────────────────── helpers ─────────────────── */
+/* ─────────────────── HELPERS ─────────────────── */
 
 function hdr(logo: string | null, withTitle: boolean) {
   const img = logo
@@ -156,67 +179,92 @@ function ftr(c: PrintableChecklist) {
   return `<div class="ft">CHECK LIST – INSTALAÇÃO MULTIMÍDIA<br><span class="ft-red">${monthYear(c.checklistDate)}</span></div>`;
 }
 
-/* ─────────────────── TABELA: INFO DO VEÍCULO ─────────────────── */
-// Colunas: label(19%) | valor(31%) | label(19%) | valor(31%)
+function renderNcLines(desc?: string | null) {
+  const text = (desc ?? '').trim();
+  if (!text) {
+    return `<div class="nc-line">&nbsp;</div><div class="nc-line">&nbsp;</div>`;
+  }
+  const lines = text.split(/\r?\n/);
+  let l1 = lines[0] ?? '';
+  let l2 = lines.slice(1).join(' ') ?? '';
+  if (lines.length === 1 && l1.length > 80) {
+    const cut = l1.lastIndexOf(' ', 80);
+    const pos = cut > 45 ? cut : 80;
+    l2 = l1.slice(pos).trim();
+    l1 = l1.slice(0, pos).trim();
+  }
+  return `<div class="nc-line">${esc(l1) || '&nbsp;'}</div><div class="nc-line">${esc(l2) || '&nbsp;'}</div>`;
+}
+
+/* ─────────────────── TABELA: INFO DO VEÍCULO (PÁGINA 1) ─────────────────── */
+// Tabela fiel de 2 colunas: col1(~35%) | col2(~65%)
 function tblInfo(c: PrintableChecklist) {
+  const dateVal = brDate(c.checklistDate);
+  const timeVal = esc(c.checklistTime);
+  const dateTimeStr = dateVal || timeVal
+    ? `<span>${dateVal}</span>${timeVal ? `<span style="margin-left:25mm;">${timeVal}</span>` : ''}`
+    : '&nbsp;';
+
+  const inspectorVal = esc(c.inspectorQA);
+  const leaderVal = esc(c.leaderVPC);
+
   return `
 <table>
   <colgroup>
-    <col style="width:19%"><col style="width:31%">
-    <col style="width:19%"><col style="width:31%">
+    <col style="width:35%">
+    <col style="width:65%">
   </colgroup>
   <tr>
-    <th colspan="4" style="text-align:left; font-size:9pt; padding:1.8mm 2mm;">Informação do Veículo</th>
+    <th style="text-align:left; font-size:8.5pt; padding:1.8mm 2.5mm; background-color:#f5f5f5;">Informação do Veículo</th>
+    <th style="background-color:#f5f5f5;">&nbsp;</th>
   </tr>
   <tr>
-    <td class="gr">Versão</td>
-    <td colspan="3">${esc(c.vehicleVersion)}</td>
+    <td>Versão</td>
+    <td>${esc(c.vehicleVersion)}</td>
   </tr>
   <tr>
-    <td class="gr">Chassi</td>
-    <td colspan="3">${esc(c.chassis)}</td>
+    <td>Chassi</td>
+    <td>${esc(c.chassis)}</td>
   </tr>
   <tr>
-    <td class="gr">Data</td>
-    <td>${brDate(c.checklistDate)}</td>
-    <td class="gr">Hora</td>
-    <td>${esc(c.checklistTime)}</td>
+    <td>Data &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Hora</td>
+    <td>${dateTimeStr}</td>
   </tr>
   <tr>
-    <td class="gr">Turno</td>
-    <td colspan="3">
+    <td>Turno</td>
+    <td>
       <span class="iopt">${box(c.shift === 'FIRST')} 1º Turno</span>
       <span class="iopt">${box(c.shift === 'SECOND')} 2º Turno</span>
     </td>
   </tr>
   <tr>
-    <td class="gr">Inspetor QA</td>
-    <td>${esc(c.inspectorQA)}</td>
-    <td class="gr">Lider VPC</td>
-    <td>${esc(c.leaderVPC)}</td>
+    <td>Inspetor QA${inspectorVal ? ` &nbsp; <strong>${inspectorVal}</strong>` : ''}</td>
+    <td>Lider VPC${leaderVal ? ` &nbsp; <strong>${leaderVal}</strong>` : ''}</td>
   </tr>
 </table>`;
 }
 
-/* ─────────────────── TABELA: INSPEÇÃO VISUAL ─────────────────── */
-// Colunas: item(58%) | OK(7%) | NOK(7%) | Obs(28%)
+/* ─────────────────── TABELA: INSPEÇÃO VISUAL (PÁGINA 1) ─────────────────── */
+const VIS_CG = `<colgroup><col style="width:58%"><col style="width:7%"><col style="width:7%"><col style="width:28%"></colgroup>`;
+const VIS_TH = `<tr><th>Item de Verificação</th><th>OK</th><th>NOK</th><th>Observação</th></tr>`;
+
 function tblVisual(c: PrintableChecklist) {
   const sec = SECTIONS.find((s) => s.key === 'VISUAL')!;
   const map = new Map(c.responses.map((r) => [r.itemCode, r]));
   const rows = sec.items.map((i) => {
     const r = map.get(i.code); const v = r?.response;
-    return `<tr class="it">
+    return `<tr class="item">
       <td>${esc(i.label.replace(/\.$/, ''))}</td>
       <td class="cc">${box(v === 'OK')}</td>
       <td class="cc">${box(v === 'NOK')}</td>
-      <td>${multiline(r?.observation)}</td>
+      <td><div class="obs-wrap">${multiline(r?.observation)}</div></td>
     </tr>`;
   }).join('');
   return `
 <div class="sec-title">INSPEÇÃO VISUAL</div>
 <table>
-  <colgroup><col style="width:58%"><col style="width:7%"><col style="width:7%"><col style="width:28%"></colgroup>
-  <tr><th>Item de Verificação</th><th>OK</th><th>NOK</th><th>Observação</th></tr>
+  ${VIS_CG}
+  ${VIS_TH}
   ${rows}
 </table>`;
 }
@@ -230,76 +278,81 @@ function funcRows(c: PrintableChecklist) {
   const map = new Map(c.responses.map((r) => [r.itemCode, r]));
   return sec.items.map((i) => {
     const r = map.get(i.code); const v = r?.response;
-    return `<tr class="it">
+    return `<tr class="item">
       <td>${esc(i.label.replace(/\.$/, ''))}</td>
       <td class="cc">${box(v === 'OK')}</td>
       <td class="cc">${box(v === 'NOK')}</td>
-      <td>${multiline(r?.observation)}</td>
+      <td><div class="obs-wrap">${multiline(r?.observation)}</div></td>
     </tr>`;
   }).join('');
 }
 
-/* ─────────────────── TABELA: INSPEÇÃO DE SOFTWARE ─────────────────── */
-// Colunas: item(36%) | OK(7%) | NOK(7%) | Obs(50%)
+/* ─────────────────── TABELA: INSPEÇÃO DE SOFTWARE (PÁGINA 2) ─────────────────── */
 function tblSoftware(c: PrintableChecklist) {
   const sec = SECTIONS.find((s) => s.key === 'SOFTWARE')!;
   const map = new Map(c.responses.map((r) => [r.itemCode, r]));
   const rows = sec.items.map((i) => {
     const r = map.get(i.code); const v = r?.response;
     const val = i.valueField ? (c[i.valueField as keyof PrintableChecklist] as string | null | undefined) : null;
-    const obs = r?.observation || val || '*TRAVAR CAMPO OBRIGATÓRIO';
-    return `<tr class="it">
+    const obsText = r?.observation || val;
+    const obsHtml = obsText
+      ? `<span style="font-size:8pt;">${esc(obsText)}</span>`
+      : `<strong>*TRAVAR CAMPO OBRIGATÓRIO</strong>`;
+
+    return `<tr class="item">
       <td>${esc(i.label)}</td>
       <td class="cc">${box(v === 'OK')}</td>
       <td class="cc">${box(v === 'NOK')}</td>
-      <td style="font-size:7.5pt;">${esc(obs)}</td>
+      <td style="text-align:center; font-size:7.5pt;">${obsHtml}</td>
     </tr>`;
   }).join('');
   return `
 <div class="sec-title">INSPEÇÃO DE SOFTWARE</div>
 <table>
-  <colgroup><col style="width:36%"><col style="width:7%"><col style="width:7%"><col style="width:50%"></colgroup>
+  <colgroup><col style="width:38%"><col style="width:7%"><col style="width:7%"><col style="width:48%"></colgroup>
   <tr><th>Item de Verificação</th><th>OK</th><th>NOK</th><th>Observação</th></tr>
   ${rows}
 </table>`;
 }
 
-/* ─────────────────── TABELA: APLICAÇÃO DE ADESIVO ─────────────────── */
-// Colunas: item(50%) | OK(6%) | NOK(6%) | NA(6%) | Obs(32%)
+/* ─────────────────── TABELA: APLICAÇÃO DE ADESIVO (PÁGINA 2) ─────────────────── */
+// Colunas: item(46%) | OK(6%) | NOK(6%) | NA(6%) | Obs(36%)
+// IMPORTANTE: Na imagem original, a linha 4 NÃO possui caixa de seleção na coluna NOK (está em branco)!
 function tblSticker(c: PrintableChecklist) {
   const sec = SECTIONS.find((s) => s.key === 'STICKER')!;
   const map = new Map(c.responses.map((r) => [r.itemCode, r]));
   const rows = sec.items.map((i) => {
     const r = map.get(i.code); const v = r?.response;
-    return `<tr class="it">
+    const isRow4 = i.code === 'ADE_04';
+
+    return `<tr class="item">
       <td>${esc(i.label.replace(/\.$/, ''))}</td>
       <td class="cc">${box(v === 'OK')}</td>
-      <td class="cc">${box(v === 'NOK')}</td>
+      <td class="cc">${isRow4 ? '&nbsp;' : box(v === 'NOK')}</td>
       <td class="cc">${box(v === 'NA')}</td>
-      <td>${multiline(r?.observation)}</td>
+      <td><div class="obs-wrap">${multiline(r?.observation)}</div></td>
     </tr>`;
   }).join('');
   return `
 <div class="sec-title">CHECKLIST - APLICAÇÃO DE ADESIVO</div>
 <table>
-  <colgroup><col style="width:50%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:32%"></colgroup>
+  <colgroup><col style="width:46%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:36%"></colgroup>
   <tr><th>Item de Verificação</th><th>OK</th><th>NOK</th><th>NA</th><th>Observação</th></tr>
   ${rows}
 </table>`;
 }
 
-/* ─────────────────── TABELA: RESULTADO DA AUDITORIA ─────────────────── */
-// Colunas: item(58%) | OK(7%) | NOK(7%) | Obs(28%)
+/* ─────────────────── TABELA: RESULTADO DA AUDITORIA (PÁGINA 3) ─────────────────── */
 function tblAudit(c: PrintableChecklist) {
   const sec = SECTIONS.find((s) => s.key === 'AUDIT')!;
   const map = new Map(c.responses.map((r) => [r.itemCode, r]));
   const rows = sec.items.map((i) => {
     const r = map.get(i.code); const v = r?.response;
-    return `<tr class="it">
-      <td>${esc(i.label)}</td>
+    return `<tr class="item">
+      <td>${esc(i.label.replace(/\.$/, ''))}</td>
       <td class="cc">${box(v === 'OK')}</td>
       <td class="cc">${box(v === 'NOK')}</td>
-      <td>${multiline(r?.observation)}</td>
+      <td><div class="obs-wrap">${multiline(r?.observation)}</div></td>
     </tr>`;
   }).join('');
   return `
@@ -311,20 +364,27 @@ function tblAudit(c: PrintableChecklist) {
 </table>`;
 }
 
-/* ─────────────────── TABELA: VALIDAÇÃO DE REPARO ─────────────────── */
-// Colunas: label(35%) | valor(15%) | label(15%) | valor(35%) — como o formulário
+/* ─────────────────── TABELA: VALIDAÇÃO DE REPARO (PÁGINA 3) ─────────────────── */
+// Tabela de 2 colunas idêntica à imagem original
 function tblRepair(c: PrintableChecklist) {
+  const inspVal = esc(c.repairInspectorQA);
+  const leaderVal = esc(c.repairLeaderVPC);
+  const dateVal = brDate(c.repairDate);
+  const timeVal = esc(c.repairTime);
+
   return `
-<table>
+<table style="margin-top: 6mm;">
   <colgroup>
-    <col style="width:35%"><col style="width:15%">
-    <col style="width:15%"><col style="width:35%">
+    <col style="width:40%">
+    <col style="width:60%">
   </colgroup>
   <tr>
-    <th colspan="4" style="text-align:center; font-size:9.5pt; padding:2mm;">VALIDAÇÃO DE REPARO</th>
+    <th colspan="2" style="text-align:center; font-size:9pt; padding:2mm; background-color:#f5f5f5;">
+      VALIDAÇÃO DE REPARO<!-- Validação de Reparo -->
+    </th>
   </tr>
   <tr>
-    <td colspan="4" style="padding:2mm 2mm; font-size:8.5pt;">
+    <td colspan="2" style="padding:2mm 2.5mm; font-size:8pt;">
       ITEM NG FOI REPARADO?&nbsp;&nbsp;&nbsp;&nbsp;
       <span class="iopt">${box(c.repairStatus === 'OK')} OK</span>
       &nbsp;|&nbsp;
@@ -332,23 +392,21 @@ function tblRepair(c: PrintableChecklist) {
     </td>
   </tr>
   <tr>
-    <td colspan="4" style="height:14mm; vertical-align:top; padding:1.5mm 2mm; font-size:8.5pt;">
-      Obs.<br>${multiline(c.repairObservation) || '&nbsp;'}
+    <td colspan="2" style="height:12mm; vertical-align:top; padding:1.5mm 2.5mm; font-size:8pt;">
+      Obs.<br><div style="max-height:8mm; overflow:hidden; word-break:break-word;">${multiline(c.repairObservation) || '&nbsp;'}</div>
     </td>
   </tr>
   <tr>
-    <td class="gr">Inspetor QA</td>
-    <td colspan="3">${esc(c.repairInspectorQA)}</td>
+    <td>Inspetor QA</td>
+    <td>${inspVal || '&nbsp;'}</td>
   </tr>
   <tr>
-    <td class="gr">Líder VPC</td>
-    <td colspan="3">${esc(c.repairLeaderVPC)}</td>
+    <td>Líder VPC</td>
+    <td>${leaderVal || '&nbsp;'}</td>
   </tr>
   <tr>
-    <td class="gr">Data</td>
-    <td>${brDate(c.repairDate)}</td>
-    <td class="gr">Hora</td>
-    <td>${esc(c.repairTime)}</td>
+    <td>Data${dateVal ? ` &nbsp;&nbsp; ${dateVal}` : ''}</td>
+    <td>Hora${timeVal ? ` &nbsp;&nbsp; ${timeVal}` : ''}</td>
   </tr>
 </table>`;
 }
@@ -357,21 +415,23 @@ function tblRepair(c: PrintableChecklist) {
 
 /**
  * PÁGINA 1
- * - Logo + linha + título
- * - Tabela Informação do Veículo
- * - Tabela Inspeção Visual
- * - Cabeçalho da tabela Inspeção Funcional (apenas header, sem linhas)
+ * - Logo + linha + título CHECK LIST – INSTALAÇÃO MULTIMIDIA
+ * - Tabela Informação do Veículo (2 colunas)
+ * - Tabela Inspeção Visual (12 itens)
+ * - Linha divisória horizontal
+ * - Título INSPEÇÃO FUNCIONAL + Cabeçalho da tabela (sem linhas)
  * - Rodapé
  */
 function page1(c: PrintableChecklist, logo: string | null) {
   const funcHeader = `
+<hr class="sec-divider">
 <div class="sec-title">INSPEÇÃO FUNCIONAL</div>
 <table>
   ${FUNC_CG}
   ${FUNC_TH}
 </table>`;
 
-  return `<section class="pg">
+  return `<section class="page">
   ${hdr(logo, true)}
   ${tblInfo(c)}
   ${tblVisual(c)}
@@ -382,16 +442,16 @@ function page1(c: PrintableChecklist, logo: string | null) {
 
 /**
  * PÁGINA 2
- * - Logo + linha (sem título)
- * - Linhas da Inspeção Funcional (sem título repetido)
- * - Tabela Inspeção de Software
- * - Tabela Aplicação de Adesivo
+ * - Logo + linha (sem título do documento)
+ * - Linhas da Inspeção Funcional (continuação direta, sem repetir título nem cabeçalho)
+ * - Tabela Inspeção de Software (com *TRAVAR CAMPO OBRIGATÓRIO)
+ * - Tabela Aplicação de Adesivo (com 4ª linha sem checkbox em NOK)
  * - Rodapé
  */
 function page2(c: PrintableChecklist, logo: string | null) {
-  const funcTable = `<table>${FUNC_CG}${funcRows(c)}</table>`;
+  const funcTable = `<!-- INSPEÇÃO FUNCIONAL --><table>${FUNC_CG}${funcRows(c)}</table>`;
 
-  return `<section class="pg">
+  return `<section class="page">
   ${hdr(logo, false)}
   ${funcTable}
   ${tblSoftware(c)}
@@ -402,19 +462,15 @@ function page2(c: PrintableChecklist, logo: string | null) {
 
 /**
  * PÁGINA 3
- * - Logo + linha (sem título)
+ * - Logo + linha (sem título do documento)
  * - Tabela Resultado da Auditoria
  * - □ APROVADO  |  □ REPROVADO
- * - "Descrição da não conformidade:"
- * - Linha de escrita
- * - Separadores
- * - Tabela Validação de Reparo
+ * - Descrição da não conformidade + 2 linhas de escrita (pautas)
+ * - Tabela Validação de Reparo (2 colunas)
  * - Rodapé
  */
 function page3(c: PrintableChecklist, logo: string | null) {
-  const ncLine = `<div class="nc-line">${esc(c.nonConformityDescription) || '&nbsp;'}</div>`;
-
-  return `<section class="pg">
+  return `<section class="page">
   ${hdr(logo, false)}
   ${tblAudit(c)}
   <div class="audit-row">
@@ -422,10 +478,10 @@ function page3(c: PrintableChecklist, logo: string | null) {
     &nbsp;&nbsp;|&nbsp;&nbsp;
     <span class="iopt">${box(c.auditResult === 'REPROVED')} REPROVADO</span>
   </div>
-  <div class="nc-label">Descrição da não conformidade:</div>
-  ${ncLine}
-  <hr class="sep">
-  <hr class="sep" style="margin-top:0">
+  <div class="nc-section">
+    <div class="nc-label">Descrição da não conformidade:</div>
+    ${renderNcLines(c.nonConformityDescription)}
+  </div>
   ${tblRepair(c)}
   ${ftr(c)}
 </section>`;
@@ -438,7 +494,7 @@ export function renderChecklistPages(c: PrintableChecklist, logo: string | null)
   return [page1(c, logo), page2(c, logo), page3(c, logo)];
 }
 
-export const BLANK_PAGE = '<section class="pg" style="padding:0"></section>';
+export const BLANK_PAGE = '<section class="page blank"></section>';
 
 /**
  * Documento completo: [p1 p2 p3] por checklist,

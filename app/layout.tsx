@@ -1,33 +1,55 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { AuthProvider } from '@/hooks/useAuth';
+import { PwaManager } from '@/components/PwaManager';
+
+export const viewport: Viewport = {
+  themeColor: '#C3002F',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'Checklist de Instalação Multimídia Nissan',
-  icons: { icon: '/nissan.png' },
+  description: 'Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - Nissan',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/nissan.png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Nissan QA',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(regs) {
-                  for (var r of regs) { r.unregister(); }
-                });
-              }
-            `,
-          }}
-        />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Nissan QA" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body><AuthProvider>{children}</AuthProvider></body>
+      <body>
+        <AuthProvider>
+          <PwaManager />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
