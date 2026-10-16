@@ -34,8 +34,16 @@ export default function PrintDayPage() {
     setBusy(true); setError(null);
     try {
       const blob = await api.blob(`/reports/daily/pdf${mode === 'download' ? '?download=1' : ''}`, { method: 'POST', body: body() });
-      if (mode === 'download') downloadBlob(blob, `checklists-${date}${shift ? (shift === 'FIRST' ? '-1turno' : '-2turno') : ''}${blank ? '-duplex' : ''}.pdf`);
-      else setPreview(URL.createObjectURL(blob));
+      if (mode === 'download') {
+        if (blob.type.includes('html')) {
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        } else {
+          downloadBlob(blob, `checklists-${date}${shift ? (shift === 'FIRST' ? '-1turno' : '-2turno') : ''}${blank ? '-duplex' : ''}.pdf`);
+        }
+      } else {
+        setPreview(URL.createObjectURL(blob));
+      }
     } catch (e) { setError(e instanceof ApiError ? e.message : 'Erro ao gerar o PDF.'); } finally { setBusy(false); }
   }
   const toggle = (id: string) => setExcluded((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
