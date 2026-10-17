@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nissan-qa-v2.1';
+const CACHE_NAME = 'nissan-qa-v2.2';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [

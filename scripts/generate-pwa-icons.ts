@@ -7,11 +7,11 @@ async function generateIcons() {
   const browser = await getBrowser();
 
   const sizes = [
-    { name: 'icon-192.png', size: 192, pad: 20 },
-    { name: 'icon-512.png', size: 512, pad: 60 },
-    { name: 'icon-maskable-192.png', size: 192, pad: 40, bg: '#ffffff' },
-    { name: 'icon-maskable-512.png', size: 512, pad: 100, bg: '#ffffff' },
-    { name: 'apple-touch-icon.png', size: 180, pad: 20, bg: '#ffffff' },
+    { name: 'icon-192.png', size: 192, pad: 24, bg: '#ffffff' },
+    { name: 'icon-512.png', size: 512, pad: 64, bg: '#ffffff' },
+    { name: 'icon-maskable-192.png', size: 192, pad: 36, bg: '#ffffff' },
+    { name: 'icon-maskable-512.png', size: 512, pad: 96, bg: '#ffffff' },
+    { name: 'apple-touch-icon.png', size: 180, pad: 24, bg: '#ffffff' },
   ];
 
   for (const { name, size, pad, bg } of sizes) {
