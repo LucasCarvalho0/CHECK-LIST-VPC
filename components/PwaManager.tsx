@@ -1,10 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+declare global {
+  interface Window {
+    __nissanInstallPrompt?: BeforeInstallPromptEvent | null;
+  }
 }
 
 export function PwaManager() {
@@ -12,8 +18,8 @@ export function PwaManager() {
   const [showModal, setShowModal] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isIos, setIsIos] = useState(false);
-  const [instruction, setInstruction] = useState<string | null>(null);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     // 1. Checa se já está rodando como App instalado (Standalone)
@@ -27,13 +33,9 @@ export function PwaManager() {
     };
 
     const standalone = checkStandalone();
+    if (standalone) return;
 
-    // 2. Detecta iOS / iPadOS
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIos(isAppleDevice);
-
-    // 3. Registrar Service Worker
+    // 2. Registrar Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
@@ -52,33 +54,60 @@ export function PwaManager() {
         .catch((err) => console.warn('PWA SW Register:', err));
     }
 
-    // 4. Monitorar status de rede
+    // 3. Monitorar status de rede
     const updateOnlineStatus = () => setIsOffline(!navigator.onLine);
     updateOnlineStatus();
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // 5. Capturar evento nativo de instalação
+    // 4. Capturar evento nativo de instalação
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const p = e as BeforeInstallPromptEvent;
+      window.__nissanInstallPrompt = p;
+      promptRef.current = p;
+      setDeferredPrompt(p);
+
+      // Abre o modal de instalação no momento exato em que o navegador estiver 100% pronto
+      const dismissed = sessionStorage.getItem('nissan_pwa_dismissed');
+      if (!dismissed) {
+        setShowModal(true);
+      }
+    };
+
+    // 5. Quando o app for instalado com sucesso pelo navegador
+    const handleAppInstalled = () => {
+      setShowModal(false);
+      setIsStandalone(true);
+      window.__nissanInstallPrompt = null;
+      promptRef.current = null;
+      setDeferredPrompt(null);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
-    // 6. Se NÃO estiver instalado e NÃO foi dispensado nesta sessão, exibe o modal
-    if (!standalone) {
+    // Caso o navegador já tenha disparado o evento anteriormente
+    if (window.__nissanInstallPrompt) {
+      promptRef.current = window.__nissanInstallPrompt;
+      setDeferredPrompt(window.__nissanInstallPrompt);
       const dismissed = sessionStorage.getItem('nissan_pwa_dismissed');
       if (!dismissed) {
-        // Pequeno delay de 600ms para a página carregar suavemente antes de abrir o modal
+        setShowModal(true);
+      }
+    } else {
+      // Fallback: se em 1.5s o evento não tiver disparado, abre o modal para que o usuário saiba que pode instalar
+      const dismissed = sessionStorage.getItem('nissan_pwa_dismissed');
+      if (!dismissed) {
         const timer = setTimeout(() => {
           setShowModal(true);
-        }, 600);
+        }, 1500);
         return () => {
           clearTimeout(timer);
           window.removeEventListener('online', updateOnlineStatus);
           window.removeEventListener('offline', updateOnlineStatus);
           window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+          window.removeEventListener('appinstalled', handleAppInstalled);
         };
       }
     }
@@ -87,25 +116,56 @@ export function PwaManager() {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
+    setIsInstalling(true);
+    let prompt = deferredPrompt || promptRef.current || window.__nissanInstallPrompt;
+
+    // Se o evento estiver a caminho, aguarda até 2.5s pelo evento
+    if (!prompt) {
+      prompt = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          const p = promptRef.current || window.__nissanInstallPrompt;
+          if (p) {
+            clearInterval(interval);
+            resolve(p);
+          } else if (attempts >= 25) { // 2.5 segundos
+            clearInterval(interval);
+            resolve(null);
+          }
+        }, 100);
+      });
+    }
+
+    if (prompt) {
       try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
+        await prompt.prompt();
+        const choice = await prompt.userChoice;
         if (choice.outcome === 'accepted') {
           setShowModal(false);
           setDeferredPrompt(null);
+          window.__nissanInstallPrompt = null;
+          promptRef.current = null;
         }
       } catch (err) {
         console.error('Erro ao acionar prompt de instalação:', err);
+      } finally {
+        setIsInstalling(false);
       }
-    } else if (isIos) {
-      setInstruction('No Safari do iPhone/iPad: toque no botão Compartilhar 📤 e selecione "Adicionar à Tela de Início" ➕.');
     } else {
-      setInstruction('Para instalar neste navegador: clique no ícone de computador/instalar (➕ ou ⬇️) na barra de endereços do topo, ou no menu do navegador (três pontinhos) e escolha "Instalar aplicativo".');
+      setIsInstalling(false);
+      // Para navegadores desktop que suportam atalho nativo ou Safari iOS
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      if (/iphone|ipad|ipod/.test(userAgent)) {
+        alert('No Safari do iPhone/iPad: Toque no botão Compartilhar (ícone com quadrado e seta 📤) e depois em "Adicionar à Tela de Início" ➕.');
+      } else {
+        alert('No topo da barra de endereços do seu navegador, clique no ícone de instalar aplicativo (➕ ou ⬇️) para concluir.');
+      }
     }
   };
 
@@ -178,27 +238,31 @@ export function PwaManager() {
                 </div>
               </div>
 
-              {/* Instrução adicional caso o navegador exija ação manual */}
-              {instruction && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 leading-relaxed animate-fade-in">
-                  💡 {instruction}
-                </div>
-              )}
-
               {/* Botões de Ação */}
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <button
                   type="button"
+                  disabled={isInstalling}
                   onClick={handleInstallClick}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#C3002F] hover:bg-[#a50027] active:scale-[0.98] py-3 px-4 text-sm font-semibold text-white shadow-md transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#C3002F] hover:bg-[#a50027] active:scale-[0.98] disabled:opacity-75 py-3 px-4 text-sm font-semibold text-white shadow-md transition-all cursor-pointer"
                 >
-                  <span>📲</span>
-                  <span>Instalar Aplicativo</span>
+                  {isInstalling ? (
+                    <>
+                      <span className="animate-spin inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      <span>Instalando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📲</span>
+                      <span>Instalar Aplicativo</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
+                  disabled={isInstalling}
                   onClick={handleDismiss}
-                  className="rounded-xl border border-slate-300 hover:bg-slate-100 active:scale-[0.98] py-3 px-5 text-sm font-medium text-slate-700 transition-all text-center"
+                  className="rounded-xl border border-slate-300 hover:bg-slate-100 active:scale-[0.98] py-3 px-5 text-sm font-medium text-slate-700 transition-all text-center cursor-pointer"
                 >
                   Cancelar
                 </button>
