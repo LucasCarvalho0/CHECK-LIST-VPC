@@ -201,12 +201,21 @@ function renderNcLines(desc?: string | null) {
 function tblInfo(c: PrintableChecklist) {
   const dateVal = brDate(c.checklistDate);
   const timeVal = esc(c.checklistTime);
-  const dateTimeStr = dateVal || timeVal
-    ? `<span>${dateVal}</span>${timeVal ? `<span style="margin-left:25mm;">${timeVal}</span>` : ''}`
-    : '&nbsp;';
 
   const inspectorVal = esc(c.inspectorQA);
   const leaderVal = esc(c.leaderVPC);
+
+  // Se preenchido: exibe rótulo com dois pontos "Data: 16/10/2026" e "Hora: 21:40"
+  // Se em branco: exibe exatamente "Data            Hora" na coluna 1 e "&nbsp;" na coluna 2 como na imagem
+  const dateCell = dateVal
+    ? `Data: <strong>${dateVal}</strong>`
+    : `Data &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Hora`;
+  const timeCell = dateVal
+    ? `Hora: <strong>${timeVal || '&nbsp;'}</strong>`
+    : '&nbsp;';
+
+  const inspectorCell = inspectorVal ? `Inspetor QA: <strong>${inspectorVal}</strong>` : 'Inspetor QA';
+  const leaderCell = leaderVal ? `Lider VPC: <strong>${leaderVal}</strong>` : 'Lider VPC';
 
   return `
 <table>
@@ -227,8 +236,8 @@ function tblInfo(c: PrintableChecklist) {
     <td>${esc(c.chassis)}</td>
   </tr>
   <tr>
-    <td>Data &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Hora</td>
-    <td>${dateTimeStr}</td>
+    <td>${dateCell}</td>
+    <td>${timeCell}</td>
   </tr>
   <tr>
     <td>Turno</td>
@@ -238,8 +247,8 @@ function tblInfo(c: PrintableChecklist) {
     </td>
   </tr>
   <tr>
-    <td>Inspetor QA${inspectorVal ? ` &nbsp; <strong>${inspectorVal}</strong>` : ''}</td>
-    <td>Lider VPC${leaderVal ? ` &nbsp; <strong>${leaderVal}</strong>` : ''}</td>
+    <td>${inspectorCell}</td>
+    <td>${leaderCell}</td>
   </tr>
 </table>`;
 }
@@ -398,15 +407,15 @@ function tblRepair(c: PrintableChecklist) {
   </tr>
   <tr>
     <td>Inspetor QA</td>
-    <td>${inspVal || '&nbsp;'}</td>
+    <td>${inspVal ? `<strong>${inspVal}</strong>` : '&nbsp;'}</td>
   </tr>
   <tr>
     <td>Líder VPC</td>
-    <td>${leaderVal || '&nbsp;'}</td>
+    <td>${leaderVal ? `<strong>${leaderVal}</strong>` : '&nbsp;'}</td>
   </tr>
   <tr>
-    <td>Data${dateVal ? ` &nbsp;&nbsp; ${dateVal}` : ''}</td>
-    <td>Hora${timeVal ? ` &nbsp;&nbsp; ${timeVal}` : ''}</td>
+    <td>Data${dateVal ? `: <strong>${dateVal}</strong>` : ''}</td>
+    <td>Hora${timeVal ? `: <strong>${timeVal}</strong>` : ''}</td>
   </tr>
 </table>`;
 }
