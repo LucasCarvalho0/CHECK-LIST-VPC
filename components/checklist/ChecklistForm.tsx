@@ -83,6 +83,14 @@ export default function ChecklistForm({ id }: { id: string }) {
   const [cancelError, setCancelError] = useState('');
   const updatedAt = useRef('');
   const pending = useRef<Pending>(empty());
+  const tabBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = tabBarRef.current?.querySelector(`[data-tab="${tab}"]`) as HTMLElement | null;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }, [tab]);
 
   // ----- carregar do servidor (persistência real: sobrevive a F5) -----
   const load = useCallback(async () => {
@@ -267,93 +275,145 @@ export default function ChecklistForm({ id }: { id: string }) {
   const ngPresent = hasNonConformity(toLike(form), toMap(items));
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-5 lg:p-6">
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Link href="/checklists" className="text-sm text-slate-500 hover:underline">← Checklists</Link>
-        <h1 className="text-xl font-bold">Chassi {form.chassis}</h1>
-        <Badge tone={status === 'FINALIZED' ? 'green' : status === 'CANCELED' ? 'red' : 'yellow'}>{statusLabel[status]}</Badge>
-        {autosave && <span className={`ml-auto text-sm font-medium ${ind[1]}`} aria-live="polite">{ind[0]}</span>}
+    <div className="mx-auto max-w-7xl w-full p-3 sm:p-4 md:p-5 lg:p-6 min-w-0">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Link href="/checklists" className="text-sm font-medium text-slate-500 hover:text-slate-800 hover:underline">← Checklists</Link>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900">Chassi {form.chassis}</h1>
+          <Badge tone={status === 'FINALIZED' ? 'green' : status === 'CANCELED' ? 'red' : 'yellow'}>{statusLabel[status]}</Badge>
+        </div>
+        {autosave && <span className={`text-xs sm:text-sm font-semibold ${ind[1]}`} aria-live="polite">{ind[0]}</span>}
       </div>
 
       {msg && <div className="mb-3"><Alert type={msg.type}>{msg.text}</Alert></div>}
       {saveState === 'error' && saveError && (
         <div className="mb-3"><Alert type="err">
-          {saveError} {saveError.includes('outra sessão') ? <button className="ml-2 underline" onClick={() => void load()}>Recarregar</button> : 'Seus dados continuam na tela; nova tentativa automática em instantes.'}
+          {saveError} {saveError.includes('outra sessão') ? <button className="ml-2 underline font-semibold" onClick={() => void load()}>Recarregar</button> : 'Seus dados continuam na tela; nova tentativa automática em instantes.'}
         </Alert></div>
       )}
       {status === 'FINALIZED' && user?.role === 'ADMIN' && <div className="mb-3"><Alert type="warn">Checklist finalizado: toda correção fica registrada no histórico (usuário, data e campos alterados). Use “Salvar alterações”.</Alert></div>}
       {status === 'FINALIZED' && user?.role === 'OPERATOR' && <div className="mb-3"><Alert type="warn">Checklist finalizado: somente leitura. Solicite a um administrador para corrigir.</Alert></div>}
       {status === 'CANCELED' && <div className="mb-3"><Alert type="err">Checklist cancelado.</Alert></div>}
 
-      {/* Tabs — horizontally scrollable on tablet/mobile */}
-      <div className="mb-3 -mx-4 md:mx-0" role="tablist">
-        <div className="flex gap-1 overflow-x-auto px-4 md:px-0 pb-1 md:flex-wrap scrollbar-none">
+      {/* Tabs — horizontally scrollable without breaking on tablet/mobile */}
+      <div className="mb-4 -mx-3 sm:-mx-4 md:mx-0 overflow-hidden" role="tablist">
+        <div
+          ref={tabBarRef}
+          className="flex gap-1.5 overflow-x-auto px-3 sm:px-4 md:px-0 pb-1.5 scrollbar-none scroll-smooth"
+        >
           {TABS.map((t) => (
-            <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-              className={`flex-shrink-0 rounded px-3 py-2.5 text-sm font-medium transition-colors ${
-                tab === t.key ? 'bg-nissan text-white' : 'bg-white border border-slate-300 hover:bg-slate-50'
-              } ${showErrors && errors.some((e) => tabOf(e.field) === t.key) ? 'ring-2 ring-amber-400' : ''}`}>
+            <button
+              key={t.key}
+              data-tab={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-shrink-0 rounded-lg px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer ${
+                tab === t.key
+                  ? 'bg-nissan text-white shadow-nissan/25 ring-1 ring-nissan'
+                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+              } ${showErrors && errors.some((e) => tabOf(e.field) === t.key) ? 'ring-2 ring-amber-400' : ''}`}
+            >
               {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1fr_16rem]">
-        <div>
-          {tab === 'INFO' && <Card><h2 className="mb-3 font-bold">Informação do Veículo</h2>
-            <VehicleFields values={form} onChange={(k, v) => setField(k, v as never)} readOnly={readOnly} errorFields={errFields} /></Card>}
+      <div className="grid gap-6 xl:grid-cols-[1fr_18rem] items-start min-w-0">
+        <div className="min-w-0 space-y-4">
+          {tab === 'INFO' && (
+            <Card>
+              <h2 className="mb-3 font-bold text-base text-slate-900">Informação do Veículo</h2>
+              <VehicleFields values={form} onChange={(k, v) => setField(k, v as never)} readOnly={readOnly} errorFields={errFields} />
+            </Card>
+          )}
           {(tab === 'VISUAL' || tab === 'FUNCTIONAL' || tab === 'SOFTWARE' || tab === 'STICKER') && (
-            <div><h2 className="mb-2 font-bold">{SECTIONS.find((s) => s.key === tab)!.title}</h2>{itemRows(tab)}</div>
+            <div className="space-y-2.5 min-w-0">
+              <h2 className="mb-2 font-bold text-base text-slate-900">{SECTIONS.find((s) => s.key === tab)!.title}</h2>
+              {itemRows(tab)}
+            </div>
           )}
           {tab === 'AUDIT' && (
-            <div className="space-y-4">
-              <div><h2 className="mb-2 font-bold">RESULTADO DA AUDITORIA</h2>{itemRows('AUDIT')}</div>
+            <div className="space-y-4 min-w-0">
+              <div>
+                <h2 className="mb-2 font-bold text-base text-slate-900">RESULTADO DA AUDITORIA</h2>
+                {itemRows('AUDIT')}
+              </div>
               <Card>
-                <div className="text-sm font-medium">Resultado geral <span className="text-red-600">*</span></div>
-                <div className={`mt-2 flex gap-3 ${errFields.includes('auditResult') ? 'rounded ring-2 ring-red-400 p-1' : ''}`} role="radiogroup" aria-label="Resultado geral">
+                <div className="text-sm font-medium text-slate-900">Resultado geral <span className="text-red-600 font-bold">*</span></div>
+                <div className={`mt-2 flex flex-wrap gap-2 sm:gap-3 ${errFields.includes('auditResult') ? 'rounded ring-2 ring-red-400 p-1' : ''}`} role="radiogroup" aria-label="Resultado geral">
                   {(['APPROVED', 'REPROVED'] as const).map((r) => (
-                    <button key={r} type="button" role="radio" aria-checked={form.auditResult === r} disabled={readOnly}
+                    <button
+                      key={r}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.auditResult === r}
+                      disabled={readOnly}
                       onClick={() => setField('auditResult', form.auditResult === r ? '' : r)}
-                      className={`rounded border px-4 py-2 text-sm font-bold disabled:opacity-60 ${form.auditResult === r ? (r === 'APPROVED' ? 'bg-green-600 text-white border-green-700' : 'bg-red-600 text-white border-red-700') : 'bg-white border-slate-300'}`}>
-                      {form.auditResult === r ? '☒' : '☐'} {r === 'APPROVED' ? 'APROVADO' : 'REPROVADO'}
+                      className={`rounded-lg border px-4 py-2.5 text-xs sm:text-sm font-bold tracking-wide transition shadow-sm active:scale-95 disabled:opacity-60 cursor-pointer ${
+                        form.auditResult === r
+                          ? (r === 'APPROVED' ? 'bg-green-600 text-white border-green-700 shadow-green-600/20' : 'bg-red-600 text-white border-red-700 shadow-red-600/20')
+                          : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="mr-1.5">{form.auditResult === r ? '☒' : '☐'}</span>
+                      {r === 'APPROVED' ? 'APROVADO' : 'REPROVADO'}
                     </button>
                   ))}
                 </div>
                 <div className="mt-4">
-                  <Field label="Descrição da não conformidade:" required={form.auditResult === 'REPROVED'}
-                    error={errFields.includes('nonConformityDescription') ? 'Obrigatória quando REPROVADO' : undefined}>
-                    <textarea rows={7} value={form.nonConformityDescription} disabled={readOnly} onChange={(e) => setField('nonConformityDescription', e.target.value)} />
+                  <Field
+                    label="Descrição da não conformidade:"
+                    required={form.auditResult === 'REPROVED'}
+                    error={errFields.includes('nonConformityDescription') ? 'Obrigatória quando REPROVADO' : undefined}
+                  >
+                    <textarea
+                      rows={6}
+                      value={form.nonConformityDescription}
+                      disabled={readOnly}
+                      onChange={(e) => setField('nonConformityDescription', e.target.value)}
+                      className="w-full rounded-lg border-slate-300"
+                    />
                   </Field>
                 </div>
               </Card>
             </div>
           )}
           {tab === 'REPAIR' && (
-            <Card className="space-y-4">
-              <h2 className="font-bold">VALIDAÇÃO DE REPARO</h2>
+            <Card className="space-y-4 min-w-0">
+              <h2 className="font-bold text-base text-slate-900">VALIDAÇÃO DE REPARO</h2>
               {ngPresent
                 ? <Alert type="warn">Há item NG (NOK ou auditoria reprovada): informe se foi reparado ou marque que não se aplica.</Alert>
                 : <p className="text-sm text-slate-500">Sem item NG até o momento. Preencha apenas se houver reparo a validar.</p>}
               <div>
-                <div className="text-sm font-medium">ITEM NG FOI REPARADO?</div>
-                <div className={`mt-2 flex flex-wrap gap-3 ${errFields.includes('repairStatus') ? 'rounded ring-2 ring-red-400 p-1' : ''}`} role="radiogroup">
+                <div className="text-sm font-medium text-slate-900">ITEM NG FOI REPARADO?</div>
+                <div className={`mt-2 flex flex-wrap gap-2 sm:gap-3 ${errFields.includes('repairStatus') ? 'rounded ring-2 ring-red-400 p-1' : ''}`} role="radiogroup">
                   {([['OK', 'OK'], ['NOK', 'NOK'], ['NOT_APPLICABLE', 'Não se aplica']] as const).map(([v, l]) => (
-                    <button key={v} type="button" role="radio" aria-checked={form.repairStatus === v} disabled={readOnly}
+                    <button
+                      key={v}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.repairStatus === v}
+                      disabled={readOnly}
                       onClick={() => setField('repairStatus', form.repairStatus === v ? '' : v)}
-                      className={`rounded border px-4 py-2 text-sm font-bold disabled:opacity-60 ${form.repairStatus === v ? 'bg-slate-800 text-white' : 'bg-white border-slate-300'}`}>
-                      {form.repairStatus === v ? '☒' : '☐'} {l}
+                      className={`rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold tracking-wide transition shadow-sm active:scale-95 disabled:opacity-60 cursor-pointer ${
+                        form.repairStatus === v ? 'bg-slate-800 text-white border-slate-900 shadow-slate-800/20' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="mr-1.5">{form.repairStatus === v ? '☒' : '☐'}</span>
+                      {l}
                     </button>
                   ))}
                 </div>
               </div>
               <Field label="Obs." required={!!form.repairStatus} error={errFields.includes('repairObservation') ? 'Preencha a observação' : undefined}>
-                <textarea rows={4} value={form.repairObservation} disabled={readOnly} onChange={(e) => setField('repairObservation', e.target.value)} />
+                <textarea rows={3} value={form.repairObservation} disabled={readOnly} onChange={(e) => setField('repairObservation', e.target.value)} className="w-full rounded-lg border-slate-300" />
               </Field>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 min-w-0">
                 <Field label="Inspetor QA" required={form.repairStatus === 'OK' || form.repairStatus === 'NOK'} error={errFields.includes('repairInspectorQA') ? 'Obrigatório' : undefined}>
                   <div className="space-y-1.5">
-                    <input value={form.repairInspectorQA} disabled={readOnly} onChange={(e) => setField('repairInspectorQA', e.target.value)} />
+                    <input value={form.repairInspectorQA} disabled={readOnly} onChange={(e) => setField('repairInspectorQA', e.target.value)} className="w-full" />
                     {!readOnly && (
                       <div className="flex flex-wrap gap-1 text-xs">
                         {(['José Augusto', 'Júlio Carvalho'] as const).map((name) => (
@@ -361,7 +421,7 @@ export default function ChecklistForm({ id }: { id: string }) {
                             key={name}
                             type="button"
                             onClick={() => setField('repairInspectorQA', name)}
-                            className="rounded bg-slate-100 px-2 py-0.5 text-slate-700 hover:bg-slate-200 transition"
+                            className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-200 transition"
                           >
                             {name}
                           </button>
@@ -372,13 +432,13 @@ export default function ChecklistForm({ id }: { id: string }) {
                 </Field>
                 <Field label="Líder VPC" required={form.repairStatus === 'OK' || form.repairStatus === 'NOK'} error={errFields.includes('repairLeaderVPC') ? 'Obrigatório' : undefined}>
                   <div className="space-y-1.5">
-                    <input value={form.repairLeaderVPC} disabled={readOnly} onChange={(e) => setField('repairLeaderVPC', e.target.value)} />
+                    <input value={form.repairLeaderVPC} disabled={readOnly} onChange={(e) => setField('repairLeaderVPC', e.target.value)} className="w-full" />
                     {!readOnly && (
                       <div className="flex flex-wrap gap-1 text-xs">
                         <button
                           type="button"
                           onClick={() => setField('repairLeaderVPC', 'Janaína Mendes')}
-                          className="rounded bg-slate-100 px-2 py-0.5 text-slate-700 hover:bg-slate-200 transition"
+                          className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-200 transition"
                         >
                           Janaína Mendes (2º Turno)
                         </button>
@@ -387,66 +447,105 @@ export default function ChecklistForm({ id }: { id: string }) {
                   </div>
                 </Field>
                 <Field label="Data" required={form.repairStatus === 'OK' || form.repairStatus === 'NOK'} error={errFields.includes('repairDate') ? 'Obrigatória' : undefined}>
-                  <input type="date" value={form.repairDate} disabled={readOnly} onChange={(e) => setField('repairDate', e.target.value)} /></Field>
+                  <input type="date" value={form.repairDate} disabled={readOnly} onChange={(e) => setField('repairDate', e.target.value)} className="w-full" />
+                </Field>
                 <Field label="Hora" required={form.repairStatus === 'OK' || form.repairStatus === 'NOK'} error={errFields.includes('repairTime') ? 'Obrigatória' : undefined}>
-                  <input type="time" value={form.repairTime} disabled={readOnly} onChange={(e) => setField('repairTime', e.target.value)} /></Field>
+                  <input type="time" value={form.repairTime} disabled={readOnly} onChange={(e) => setField('repairTime', e.target.value)} className="w-full" />
+                </Field>
               </div>
             </Card>
           )}
 
-          <div className="mt-4 flex justify-between">
-            <Btn onClick={() => setTab(TABS[Math.max(0, TABS.findIndex((t) => t.key === tab) - 1)].key)} disabled={tab === 'INFO'} className="!py-3 !px-5">← Anterior</Btn>
-            <Btn onClick={() => setTab(TABS[Math.min(TABS.length - 1, TABS.findIndex((t) => t.key === tab) + 1)].key)} disabled={tab === 'REPAIR'} className="!py-3 !px-5">Próxima →</Btn>
+          <div className="mt-4 flex justify-between gap-3">
+            <Btn onClick={() => setTab(TABS[Math.max(0, TABS.findIndex((t) => t.key === tab) - 1)].key)} disabled={tab === 'INFO'} className="!py-2.5 !px-5 text-sm font-semibold">← Anterior</Btn>
+            <Btn onClick={() => setTab(TABS[Math.min(TABS.length - 1, TABS.findIndex((t) => t.key === tab) + 1)].key)} disabled={tab === 'REPAIR'} className="!py-2.5 !px-5 text-sm font-semibold">Próxima →</Btn>
           </div>
         </div>
 
-        <aside className="space-y-3 md:sticky md:top-4 md:self-start">
-          <Card>
-            <h3 className="mb-2 text-sm font-bold">Itens NOK ({nokList.length})</h3>
-            {nokList.length === 0 ? <p className="text-xs text-slate-500">Nenhum item NOK.</p> : (
-              <ul className="space-y-1 text-xs">
-                {nokList.map((i) => (
-                  <li key={i.code}><button className="text-left text-red-700 underline" onClick={() => { setTab(tabOf(i.code)); setTimeout(() => document.getElementById(`item-${i.code}`)?.scrollIntoView({ block: 'center' }), 50); }}>{i.label}</button></li>
-                ))}
-              </ul>
-            )}
-          </Card>
-          {showErrors && errors.length > 0 && (
-            <Card className="border-amber-300">
-              <h3 className="mb-2 text-sm font-bold text-amber-800">Pendências ({errors.length})</h3>
-              <ul className="max-h-64 space-y-1 overflow-auto text-xs">
-                {errors.map((e, i) => <li key={i}><button className="text-left underline" onClick={() => setTab(tabOf(e.field))}>{e.message}</button></li>)}
-              </ul>
+        <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start min-w-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-3">
+            <Card>
+              <h3 className="mb-2 text-sm font-bold text-slate-900 flex items-center justify-between">
+                <span>Itens NOK</span>
+                <Badge tone={nokList.length > 0 ? 'red' : 'gray'}>{nokList.length}</Badge>
+              </h3>
+              {nokList.length === 0 ? <p className="text-xs text-slate-500">Nenhum item NOK.</p> : (
+                <ul className="space-y-1.5 text-xs max-h-48 overflow-y-auto">
+                  {nokList.map((i) => (
+                    <li key={i.code}>
+                      <button
+                        type="button"
+                        className="text-left text-red-700 hover:text-red-900 underline font-medium cursor-pointer"
+                        onClick={() => {
+                          setTab(tabOf(i.code));
+                          setTimeout(() => document.getElementById(`item-${i.code}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50);
+                        }}
+                      >
+                        {i.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Card>
-          )}
-          <Card className="space-y-2">
+            {showErrors && errors.length > 0 && (
+              <Card className="border-amber-300 bg-amber-50/50">
+                <h3 className="mb-2 text-sm font-bold text-amber-900 flex items-center justify-between">
+                  <span>Pendências</span>
+                  <Badge tone="yellow">{errors.length}</Badge>
+                </h3>
+                <ul className="max-h-48 space-y-1.5 overflow-y-auto text-xs">
+                  {errors.map((e, i) => (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        className="text-left text-amber-900 hover:text-amber-950 underline cursor-pointer"
+                        onClick={() => setTab(tabOf(e.field))}
+                      >
+                        {e.message}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </div>
+
+          <Card className="space-y-3">
+            <div className="border-b border-slate-100 pb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Painel de Ações</h3>
+            </div>
             {!readOnly && status === 'IN_PROGRESS' && (
               <button
                 type="button"
                 onClick={markAllOk}
-                className="w-full rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-100 active:scale-98"
+                className="w-full rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-xs sm:text-sm font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-100 active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                ✓ Marcar todas seções como OK (X)
+                <span className="text-base leading-none">✓</span>
+                <span>Marcar todas seções como OK (X)</span>
               </button>
             )}
-            {!readOnly && status === 'IN_PROGRESS' && <Btn className="w-full" disabled={busy} onClick={() => saveNow('Rascunho salvo.')}>Salvar rascunho</Btn>}
-            {!readOnly && status === 'FINALIZED' && <Btn className="w-full" variant="primary" disabled={busy} onClick={() => saveNow('Alterações salvas e registradas no histórico.')}>Salvar alterações</Btn>}
-            {!readOnly && status === 'IN_PROGRESS' && <Btn className="w-full" variant="primary" disabled={busy} onClick={requestFinalize}>Finalizar checklist</Btn>}
-            <Btn className="w-full" disabled={busy} onClick={openPreview}>Visualizar impressão</Btn>
-            <Btn className="w-full" disabled={busy} onClick={downloadPdf}>Gerar PDF</Btn>
-            {user?.role === 'ADMIN' && status !== 'CANCELED' && <Btn className="w-full" variant="danger" disabled={busy} onClick={requestCancel}>Cancelar checklist</Btn>}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-2">
+              {!readOnly && status === 'IN_PROGRESS' && <Btn className="w-full !py-2.5" disabled={busy} onClick={() => saveNow('Rascunho salvo.')}>Salvar rascunho</Btn>}
+              {!readOnly && status === 'FINALIZED' && <Btn className="w-full !py-2.5" variant="primary" disabled={busy} onClick={() => saveNow('Alterações salvas e registradas no histórico.')}>Salvar alterações</Btn>}
+              {!readOnly && status === 'IN_PROGRESS' && <Btn className="w-full !py-2.5" variant="primary" disabled={busy} onClick={requestFinalize}>Finalizar checklist</Btn>}
+              <Btn className="w-full !py-2.5" disabled={busy} onClick={openPreview}>Visualizar impressão</Btn>
+              <Btn className="w-full !py-2.5" disabled={busy} onClick={downloadPdf}>Gerar PDF</Btn>
+              {user?.role === 'ADMIN' && status !== 'CANCELED' && <Btn className="w-full !py-2.5" variant="danger" disabled={busy} onClick={requestCancel}>Cancelar checklist</Btn>}
+            </div>
           </Card>
         </aside>
       </div>
 
       {preview && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-3" role="dialog" aria-label="Pré-visualização de impressão">
-          <div className="mb-2 flex gap-2">
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-3 sm:p-4" role="dialog" aria-label="Pré-visualização de impressão">
+          <div className="mb-2 flex flex-wrap gap-2">
             <Btn variant="primary" onClick={() => (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print()}>Imprimir</Btn>
             <Btn onClick={downloadPdf}>Baixar PDF</Btn>
             <Btn className="ml-auto" onClick={closePreview}>Fechar</Btn>
           </div>
-          <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded bg-white" title="Prévia do PDF" />
+          <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded-xl bg-white border-0 shadow-2xl" title="Prévia do PDF" />
         </div>
       )}
 

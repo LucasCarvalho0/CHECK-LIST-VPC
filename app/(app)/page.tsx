@@ -46,7 +46,7 @@ export default function Dashboard() {
       {error && <Alert type="err">{error}</Alert>}
       {!sum && !error ? <Spinner /> : (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {cards.map(([l, v, c]) => <Card key={l}><div className="text-xs text-slate-500">{l}</div><div className={`text-3xl font-bold ${c}`}>{v ?? 0}</div></Card>)}
           </div>
           <h2 className="mb-2 font-bold">Checklists recentes</h2>

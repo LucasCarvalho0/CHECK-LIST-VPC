@@ -11,10 +11,13 @@ html, body {
 }
 
 /* Inputs & selects — larger tap targets on touch */
-input, select, textarea {
+input:not([type="radio"]):not([type="checkbox"]), select, textarea {
   @apply rounded border border-slate-300 bg-white px-2 py-1.5 text-sm w-full;
   /* Minimum 44px touch target on tablet/mobile */
   min-height: 2.75rem;
+}
+input[type="radio"], input[type="checkbox"] {
+  cursor: pointer;
 }
 input:focus, select:focus, textarea:focus { @apply outline-none ring-2 ring-sky-400; }
 input:disabled, select:disabled, textarea:disabled { @apply bg-slate-100 text-slate-500; }

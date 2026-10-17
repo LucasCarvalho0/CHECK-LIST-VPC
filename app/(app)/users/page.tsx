@@ -32,7 +32,7 @@ export default function UsersPage() {
       {msg && <div className="mb-3"><Alert type={msg.t}>{msg.m}</Alert></div>}
       <Card className="mb-4">
         <h2 className="mb-3 font-bold">Novo usuário</h2>
-        <form onSubmit={create} className="grid gap-3 md:grid-cols-5">
+        <form onSubmit={create} className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           <Field label="Nome"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
           <Field label="Login"><input required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
           <Field label="Senha (mín. 8)"><input required type="password" minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>

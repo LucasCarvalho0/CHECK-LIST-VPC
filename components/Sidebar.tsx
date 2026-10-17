@@ -99,7 +99,7 @@ export default function Sidebar() {
       {collapsed && (
         <button
           onClick={toggleCollapsed}
-          className="hidden md:flex fixed top-3 left-3 z-30 items-center justify-center h-10 w-10 rounded-xl bg-slate-900/95 text-slate-200 hover:text-white shadow-lg border border-slate-700 hover:bg-slate-800 active:scale-95 transition-all cursor-pointer backdrop-blur-sm"
+          className="hidden lg:flex fixed top-3 left-3 z-30 items-center justify-center h-10 w-10 rounded-xl bg-slate-900/95 text-slate-200 hover:text-white shadow-lg border border-slate-700 hover:bg-slate-800 active:scale-95 transition-all cursor-pointer backdrop-blur-sm"
           title="Abrir aba lateral"
           aria-label="Abrir aba lateral"
         >
@@ -111,15 +111,15 @@ export default function Sidebar() {
         </button>
       )}
 
-      {/* ── Desktop sidebar (md+) ── */}
+      {/* ── Desktop sidebar (lg+) ── */}
       {!collapsed && (
-        <aside className="hidden md:flex w-60 flex-shrink-0 flex-col bg-slate-900 text-slate-100 min-h-screen transition-all duration-200 border-r border-slate-800">
+        <aside className="hidden lg:flex w-60 flex-shrink-0 flex-col bg-slate-900 text-slate-100 min-h-screen transition-all duration-200 border-r border-slate-800">
           <NavContent onClose={toggleCollapsed} />
         </aside>
       )}
 
-      {/* ── Mobile/Tablet top bar com botão de 3 riscos ── */}
-      <div className="md:hidden flex items-center justify-between bg-slate-900 text-slate-100 px-4 py-3 sticky top-0 z-40 border-b border-slate-800">
+      {/* ── Mobile/Tablet top bar com botão de 3 riscos (< lg) ── */}
+      <div className="lg:hidden flex items-center justify-between bg-slate-900 text-slate-100 px-4 py-3 sticky top-0 z-40 border-b border-slate-800">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setOpen(true)}
@@ -136,9 +136,9 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* ── Mobile Drawer overlay ── */}
+      {/* ── Mobile/Tablet Drawer overlay (< lg) ── */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-50 flex" role="dialog" aria-label="Menu de navegação">
+        <div className="lg:hidden fixed inset-0 z-50 flex" role="dialog" aria-label="Menu de navegação">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           {/* Drawer */}

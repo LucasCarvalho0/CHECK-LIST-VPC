@@ -17,11 +17,11 @@ export default function VehicleFields({
   const err = (f: string) => (errorFields.includes(f) ? 'Campo obrigatório' : undefined);
   const text = (k: keyof VehicleValues, label: string) => (
     <Field label={label} required error={err(k)}>
-      <input id={`f-${k}`} value={values[k]} disabled={readOnly} onChange={(e) => onChange(k, e.target.value as never)} className={err(k) ? 'border-red-500' : ''} />
+      <input id={`f-${k}`} value={values[k]} disabled={readOnly} onChange={(e) => onChange(k, e.target.value as never)} className={`w-full ${err(k) ? 'border-red-500' : ''}`} />
     </Field>
   );
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 min-w-0">
       <Field label="Versão" required error={err('vehicleVersion')}>
         <select
           id="f-vehicleVersion"
@@ -41,20 +41,20 @@ export default function VehicleFields({
           onEnter={onChassisEnter} />
       </Field>
       <Field label="Data" required error={err('checklistDate')}>
-        <input type="date" value={values.checklistDate} disabled={readOnly} onChange={(e) => onChange('checklistDate', e.target.value)} />
+        <input type="date" value={values.checklistDate} disabled={readOnly} onChange={(e) => onChange('checklistDate', e.target.value)} className="w-full" />
       </Field>
       <Field label="Hora" required error={err('checklistTime')}>
-        <input type="time" value={values.checklistTime} disabled={readOnly} onChange={(e) => onChange('checklistTime', e.target.value)} />
+        <input type="time" value={values.checklistTime} disabled={readOnly} onChange={(e) => onChange('checklistTime', e.target.value)} className="w-full" />
       </Field>
-      <div className="text-sm md:col-span-2">
+      <div className="text-sm sm:col-span-2 min-w-0">
         <span className="mb-1 block font-medium text-slate-700">Turno <span className="text-red-600">*</span></span>
-        <div className={`flex gap-4 rounded border p-2.5 ${err('shift') ? 'border-red-500' : 'border-slate-300'}`} role="radiogroup" aria-label="Turno">
+        <div className={`flex flex-wrap gap-4 rounded-lg border p-2.5 ${err('shift') ? 'border-red-500' : 'border-slate-300'}`} role="radiogroup" aria-label="Turno">
           {(['FIRST', 'SECOND'] as const).map((s) => (
             <label key={s} className="flex cursor-pointer items-center gap-2">
               <input
                 type="radio"
                 name="shift"
-                className="!w-4"
+                className="!w-4 !h-4"
                 checked={values.shift === s}
                 disabled={readOnly}
                 onChange={() => {
@@ -64,7 +64,7 @@ export default function VehicleFields({
                   }
                 }}
               />
-              {s === 'FIRST' ? '1º Turno' : '2º Turno'}
+              <span className="text-sm font-medium">{s === 'FIRST' ? '1º Turno' : '2º Turno'}</span>
             </label>
           ))}
         </div>
@@ -86,10 +86,10 @@ export default function VehicleFields({
           )}
         </select>
       </Field>
-      <div>
+      <div className="min-w-0">
         {text('leaderVPC', 'Líder VPC')}
         {!readOnly && (
-          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
             <span>Preenchimento rápido:</span>
             <button
               type="button"
