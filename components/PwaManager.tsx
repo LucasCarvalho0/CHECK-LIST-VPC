@@ -43,16 +43,40 @@ export function PwaManager() {
   };
 
   useEffect(() => {
-    // 1. Checa se já está rodando como App instalado (Standalone)
-    const checkStandalone = () => {
-      const isStandaloneMode =
+    // 1. Checa se o sistema já foi instalado
+    const checkInstalled = () => {
+      if (typeof window === 'undefined') return false;
+      const isInstalled =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
-        document.referrer.includes('android-app://');
-      setIsStandalone(isStandaloneMode);
-      return isStandaloneMode;
+        document.referrer.includes('android-app://') ||
+        localStorage.getItem('sese_pwa_installed') === 'true' ||
+        localStorage.getItem('nissan_pwa_installed') === 'true';
+
+      if (isInstalled) {
+        setIsStandalone(true);
+        setShowModal(false);
+      }
+      return isInstalled;
     };
-    const standalone = checkStandalone();
+
+    const alreadyInstalled = checkInstalled();
+
+    // Checagem avançada de app instalado via navegador (quando suportado)
+    if ('getInstalledRelatedApps' in navigator) {
+      try {
+        (navigator as unknown as { getInstalledRelatedApps?: () => Promise<unknown[]> })
+          .getInstalledRelatedApps?.()
+          .then((apps) => {
+            if (apps && apps.length > 0) {
+              localStorage.setItem('sese_pwa_installed', 'true');
+              setIsStandalone(true);
+              setShowModal(false);
+            }
+          })
+          .catch(() => {});
+      } catch (_) {}
+    }
 
     // 2. Registrar Service Worker SEMPRE (inclusive em modo Standalone)
     if ('serviceWorker' in navigator) {
@@ -115,8 +139,8 @@ export function PwaManager() {
       if (document.visibilityState === 'visible') checkForUpdates();
     });
 
-    // 5. Se já estiver no modo standalone, não precisa abrir modal de instalação
-    if (standalone) {
+    // 5. Se já foi reconhecido como instalado, não abre modal de instalação
+    if (alreadyInstalled) {
       return () => {
         window.removeEventListener('online', updateOnlineStatus);
         window.removeEventListener('offline', updateOnlineStatus);
@@ -124,7 +148,7 @@ export function PwaManager() {
       };
     }
 
-    // 6. Capturar evento nativo de instalação
+    // 6. Capturar evento nativo de instalação e evento de sucesso
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const p = e as BeforeInstallPromptEvent;
@@ -132,13 +156,19 @@ export function PwaManager() {
       promptRef.current = p;
       setDeferredPrompt(p);
 
-      const dismissed = sessionStorage.getItem('sese_pwa_dismissed') || sessionStorage.getItem('nissan_pwa_dismissed');
-      if (!dismissed) {
-        setShowModal(true);
+      // Se não está instalado e nem dispensado temporariamente na sessão
+      if (!checkInstalled()) {
+        const dismissed = sessionStorage.getItem('sese_pwa_dismissed');
+        if (!dismissed) {
+          setShowModal(true);
+        }
       }
     };
 
+    // Evento disparado pelo navegador assim que a instalação é concluída com sucesso
     const handleAppInstalled = () => {
+      localStorage.setItem('sese_pwa_installed', 'true');
+      sessionStorage.removeItem('sese_pwa_dismissed');
       setShowModal(false);
       setIsStandalone(true);
       window.__seseInstallPrompt = null;
@@ -153,16 +183,17 @@ export function PwaManager() {
     if (existingPrompt) {
       promptRef.current = existingPrompt;
       setDeferredPrompt(existingPrompt);
-      const dismissed = sessionStorage.getItem('sese_pwa_dismissed') || sessionStorage.getItem('nissan_pwa_dismissed');
-      if (!dismissed) {
+      if (!checkInstalled() && !sessionStorage.getItem('sese_pwa_dismissed')) {
         setShowModal(true);
       }
     } else {
-      const dismissed = sessionStorage.getItem('sese_pwa_dismissed') || sessionStorage.getItem('nissan_pwa_dismissed');
-      if (!dismissed) {
+      // Assim que entrar no sistema, se ainda não foi instalado, exibe a opção de baixar
+      if (!checkInstalled() && !sessionStorage.getItem('sese_pwa_dismissed')) {
         const timer = setTimeout(() => {
-          setShowModal(true);
-        }, 1500);
+          if (!checkInstalled()) {
+            setShowModal(true);
+          }
+        }, 1000);
         return () => {
           clearTimeout(timer);
           window.removeEventListener('online', updateOnlineStatus);
@@ -196,7 +227,7 @@ export function PwaManager() {
           if (p) {
             clearInterval(interval);
             resolve(p);
-          } else if (attempts >= 25) {
+          } else if (attempts >= 15) {
             clearInterval(interval);
             resolve(null);
           }
@@ -209,10 +240,18 @@ export function PwaManager() {
         await prompt.prompt();
         const choice = await prompt.userChoice;
         if (choice.outcome === 'accepted') {
+          // Confirmou e baixou: grava para nunca mais mostrar a mensagem
+          localStorage.setItem('sese_pwa_installed', 'true');
+          sessionStorage.removeItem('sese_pwa_dismissed');
+          setIsStandalone(true);
           setShowModal(false);
           setDeferredPrompt(null);
           window.__seseInstallPrompt = null;
           promptRef.current = null;
+        } else {
+          // Usuário cancelou o prompt nativo
+          setShowModal(false);
+          sessionStorage.setItem('sese_pwa_dismissed', 'true');
         }
       } catch (err) {
         console.error('Erro ao acionar prompt de instalação:', err);
@@ -221,12 +260,17 @@ export function PwaManager() {
       }
     } else {
       setIsInstalling(false);
+      // Caso não haja prompt automático (ex.: Safari no iOS ou navegador específico)
       const userAgent = window.navigator.userAgent.toLowerCase();
       if (/iphone|ipad|ipod/.test(userAgent)) {
         alert('No Safari do iPhone/iPad: Toque no botão Compartilhar (ícone com quadrado e seta 📤) e depois em "Adicionar à Tela de Início" ➕.');
       } else {
-        alert('No topo da barra de endereços do seu navegador, clique no ícone de instalar aplicativo (➕ ou ⬇️) para concluir.');
+        alert('No topo da barra de endereços do seu navegador, clique no ícone de instalar aplicativo (➕ ou ⬇️) para concluir a instalação.');
       }
+      // Marca como aceito/confirmado para não ficar incomodando
+      localStorage.setItem('sese_pwa_installed', 'true');
+      setIsStandalone(true);
+      setShowModal(false);
     }
   };
 
