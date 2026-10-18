@@ -9,6 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 declare global {
   interface Window {
+    __seseInstallPrompt?: BeforeInstallPromptEvent | null;
     __nissanInstallPrompt?: BeforeInstallPromptEvent | null;
   }
 }
@@ -19,7 +20,27 @@ export function PwaManager() {
   const [isOffline, setIsOffline] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
+
+  const handleUpdateApp = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg?.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) await r.unregister();
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const k of keys) await caches.delete(k);
+      }
+    } finally {
+      window.location.reload();
+    }
+  };
 
   useEffect(() => {
     // 1. Checa se já está rodando como App instalado (Standalone)
@@ -31,27 +52,45 @@ export function PwaManager() {
       setIsStandalone(isStandaloneMode);
       return isStandaloneMode;
     };
-
     const standalone = checkStandalone();
-    if (standalone) return;
 
-    // 2. Registrar Service Worker
+    // 2. Registrar Service Worker SEMPRE (inclusive em modo Standalone)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
+          // Força verificação imediata de atualizações
+          reg.update();
+
+          // Se já tem um service worker esperando, avisa que há atualização
+          if (reg.waiting) {
+            setUpdateAvailable(true);
+          }
+
           reg.onupdatefound = () => {
             const installing = reg.installing;
             if (installing) {
               installing.onstatechange = () => {
-                if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('Nova versão do PWA Nissan disponível.');
+                if (installing.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    console.log('Nova versão do PWA SESÉ QA pronta.');
+                    setUpdateAvailable(true);
+                  }
                 }
               };
             }
           };
         })
         .catch((err) => console.warn('PWA SW Register:', err));
+
+      // Se o novo Service Worker assumiu o controle, recarrega para aplicar
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     }
 
     // 3. Monitorar status de rede
@@ -60,26 +99,49 @@ export function PwaManager() {
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // 4. Capturar evento nativo de instalação
+    // 4. Checar atualização ao voltar ao aplicativo (foco / visibilidade)
+    const checkForUpdates = () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then((reg) => {
+          if (reg) {
+            reg.update();
+            if (reg.waiting) setUpdateAvailable(true);
+          }
+        });
+      }
+    };
+    window.addEventListener('focus', checkForUpdates);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkForUpdates();
+    });
+
+    // 5. Se já estiver no modo standalone, não precisa abrir modal de instalação
+    if (standalone) {
+      return () => {
+        window.removeEventListener('online', updateOnlineStatus);
+        window.removeEventListener('offline', updateOnlineStatus);
+        window.removeEventListener('focus', checkForUpdates);
+      };
+    }
+
+    // 6. Capturar evento nativo de instalação
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       const p = e as BeforeInstallPromptEvent;
-      window.__nissanInstallPrompt = p;
+      window.__seseInstallPrompt = p;
       promptRef.current = p;
       setDeferredPrompt(p);
 
-      // Abre o modal de instalação no momento exato em que o navegador estiver 100% pronto
-      const dismissed = sessionStorage.getItem('nissan_pwa_dismissed');
+      const dismissed = sessionStorage.getItem('sese_pwa_dismissed') || sessionStorage.getItem('nissan_pwa_dismissed');
       if (!dismissed) {
         setShowModal(true);
       }
     };
 
-    // 5. Quando o app for instalado com sucesso pelo navegador
     const handleAppInstalled = () => {
       setShowModal(false);
       setIsStandalone(true);
-      window.__nissanInstallPrompt = null;
+      window.__seseInstallPrompt = null;
       promptRef.current = null;
       setDeferredPrompt(null);
     };
@@ -87,17 +149,16 @@ export function PwaManager() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Caso o navegador já tenha disparado o evento anteriormente
-    if (window.__nissanInstallPrompt) {
-      promptRef.current = window.__nissanInstallPrompt;
-      setDeferredPrompt(window.__nissanInstallPrompt);
-      const dismissed = sessionStorage.getItem('nissan_pwa_dismissed');
+    const existingPrompt = window.__seseInstallPrompt || window.__nissanInstallPrompt;
+    if (existingPrompt) {
+      promptRef.current = existingPrompt;
+      setDeferredPrompt(existingPrompt);
+      const dismissed = sessionStorage.getItem('sese_pwa_dismissed') || sessionStorage.getItem('nissan_pwa_dismissed');
       if (!dismissed) {
         setShowModal(true);
       }
     } else {
-      // Fallback: se em 1.5s o evento não tiver disparado, abre o modal para que o usuário saiba que pode instalar
-      const dismissed = sessionStorage.getItem('nissan_pwa_dismissed');
+      const dismissed = sessionStorage.getItem('sese_pwa_dismissed') || sessionStorage.getItem('nissan_pwa_dismissed');
       if (!dismissed) {
         const timer = setTimeout(() => {
           setShowModal(true);
@@ -106,6 +167,7 @@ export function PwaManager() {
           clearTimeout(timer);
           window.removeEventListener('online', updateOnlineStatus);
           window.removeEventListener('offline', updateOnlineStatus);
+          window.removeEventListener('focus', checkForUpdates);
           window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
           window.removeEventListener('appinstalled', handleAppInstalled);
         };
@@ -115,6 +177,7 @@ export function PwaManager() {
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
+      window.removeEventListener('focus', checkForUpdates);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
@@ -122,19 +185,18 @@ export function PwaManager() {
 
   const handleInstallClick = async () => {
     setIsInstalling(true);
-    let prompt = deferredPrompt || promptRef.current || window.__nissanInstallPrompt;
+    let prompt = deferredPrompt || promptRef.current || window.__seseInstallPrompt || window.__nissanInstallPrompt;
 
-    // Se o evento estiver a caminho, aguarda até 2.5s pelo evento
     if (!prompt) {
       prompt = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
         let attempts = 0;
         const interval = setInterval(() => {
           attempts++;
-          const p = promptRef.current || window.__nissanInstallPrompt;
+          const p = promptRef.current || window.__seseInstallPrompt || window.__nissanInstallPrompt;
           if (p) {
             clearInterval(interval);
             resolve(p);
-          } else if (attempts >= 25) { // 2.5 segundos
+          } else if (attempts >= 25) {
             clearInterval(interval);
             resolve(null);
           }
@@ -149,7 +211,7 @@ export function PwaManager() {
         if (choice.outcome === 'accepted') {
           setShowModal(false);
           setDeferredPrompt(null);
-          window.__nissanInstallPrompt = null;
+          window.__seseInstallPrompt = null;
           promptRef.current = null;
         }
       } catch (err) {
@@ -159,7 +221,6 @@ export function PwaManager() {
       }
     } else {
       setIsInstalling(false);
-      // Para navegadores desktop que suportam atalho nativo ou Safari iOS
       const userAgent = window.navigator.userAgent.toLowerCase();
       if (/iphone|ipad|ipod/.test(userAgent)) {
         alert('No Safari do iPhone/iPad: Toque no botão Compartilhar (ícone com quadrado e seta 📤) e depois em "Adicionar à Tela de Início" ➕.');
@@ -171,49 +232,67 @@ export function PwaManager() {
 
   const handleDismiss = () => {
     setShowModal(false);
-    sessionStorage.setItem('nissan_pwa_dismissed', 'true');
+    sessionStorage.setItem('sese_pwa_dismissed', 'true');
   };
-
-  // Se já estiver instalado no modo App, não precisa exibir nada
-  if (isStandalone) {
-    return isOffline ? (
-      <div
-        role="status"
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-amber-600 px-4 py-2 text-xs font-semibold text-white shadow-md"
-      >
-        <span>⚠️</span>
-        <span>Você está operando offline. As alterações locais serão sincronizadas ao reconectar.</span>
-      </div>
-    ) : null;
-  }
 
   return (
     <>
+      {/* Banner de Atualização Disponível (aparece no topo do App PWA) */}
+      {updateAvailable && (
+        <aside
+          role="status"
+          aria-label="Atualização disponível"
+          className="fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between gap-3 bg-slate-900 border-b-2 border-emerald-500 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-2xl animate-in slide-in-from-top duration-300"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-base animate-bounce">🚀</span>
+            <span className="truncate">Nova versão do <strong>SESÉ QA</strong> disponível!</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleUpdateApp}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-md hover:bg-emerald-500 active:scale-95 transition cursor-pointer"
+            >
+              Atualizar Agora
+            </button>
+            <button
+              onClick={() => setUpdateAvailable(false)}
+              className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded"
+              title="Fechar aviso"
+            >
+              ✕
+            </button>
+          </div>
+        </aside>
+      )}
+
       {/* Alerta de Modo Offline */}
       {isOffline && (
-        <div
+        <aside
           role="status"
-          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-amber-600 px-4 py-2 text-xs font-semibold text-white shadow-md animate-fade-in"
+          aria-label="Modo offline"
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-amber-600 px-4 py-2 text-xs font-semibold text-white shadow-md"
         >
           <span>⚠️</span>
           <span>Você está operando offline. As alterações locais serão sincronizadas ao reconectar.</span>
-        </div>
+        </aside>
       )}
 
       {/* Modal Prominente de Instalação do Sistema (PWA) */}
-      {showModal && (
+      {!isStandalone && showModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
-            {/* Topo com Logo CCE em Fundo Branco */}
+            {/* Topo com Logo SESÉ em Fundo Branco */}
             <div className="flex flex-col items-center border-b border-slate-100 bg-slate-50/50 p-6 text-center">
               <div className="flex h-20 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/grupo-sese.png" alt="SESÉ QA" className="h-full w-full object-contain" />
               </div>
               <h3 className="mt-3 text-lg font-bold text-slate-900">
                 Instalar Aplicativo SESÉ QA?
               </h3>
               <p className="mt-1 text-xs text-slate-500">
-                Sistema de Checklist de Multimídia e Controle VPC
+                Checklist Multimídia e Controle de Qualidade VPC
               </p>
             </div>
 
@@ -225,46 +304,46 @@ export function PwaManager() {
 
               <div className="grid gap-2.5 rounded-xl bg-slate-50 p-3.5 text-xs text-slate-700">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-[#C3002F] font-bold">✓</span>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">✓</span>
                   <span><strong>Acesso rápido:</strong> Ícone direto na tela inicial</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-[#C3002F] font-bold">✓</span>
-                  <span><strong>Tela cheia:</strong> Sem barras do navegador para mais espaço</span>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">✓</span>
+                  <span><strong>Tela cheia:</strong> Mais espaço sem barra de navegação</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-[#C3002F] font-bold">✓</span>
-                  <span><strong>Modo Offline:</strong> Funciona mesmo se a conexão cair</span>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">✓</span>
+                  <span><strong>Desempenho:</strong> Carregamento instantâneo</span>
                 </div>
               </div>
 
               {/* Botões de Ação */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <div className="mt-6 flex flex-col gap-2.5 pt-2">
                 <button
                   type="button"
                   disabled={isInstalling}
                   onClick={handleInstallClick}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#C3002F] hover:bg-[#a50027] active:scale-[0.98] disabled:opacity-75 py-3 px-4 text-sm font-semibold text-white shadow-md transition-all cursor-pointer"
+                  className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isInstalling ? (
                     <>
-                      <span className="animate-spin inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                      <span>Instalando...</span>
+                      <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      Instalando...
                     </>
                   ) : (
-                    <>
-                      <span>📲</span>
-                      <span>Instalar Aplicativo</span>
-                    </>
+                    'Instalar Aplicativo Agora'
                   )}
                 </button>
+
                 <button
                   type="button"
-                  disabled={isInstalling}
                   onClick={handleDismiss}
-                  className="rounded-xl border border-slate-300 hover:bg-slate-100 active:scale-[0.98] py-3 px-5 text-sm font-medium text-slate-700 transition-all text-center cursor-pointer"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition cursor-pointer"
                 >
-                  Cancelar
+                  Agora não, continuar no navegador
                 </button>
               </div>
             </div>

@@ -1,32 +1,42 @@
-const CACHE_NAME = 'nissan-qa-v2.2';
+const CACHE_NAME = 'sese-qa-v3.0';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
   '/offline.html',
+  '/grupo-sese.png',
   '/nissan.png',
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',
 ];
 
-// Install: precache critical assets
+// Install: precache critical assets and skip waiting immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate: clean up old versions
+// Message listener to trigger immediate skip waiting from client
+self.addEventListener('message', (event) => {
+  if (event.data && (event.data.type === 'SKIP_WAITING' || event.data === 'skipWaiting')) {
+    self.skipWaiting();
+  }
+});
+
+// Activate: clean up old versions and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', key);
             return caches.delete(key);
           }
         })
@@ -35,7 +45,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: network first with offline fallback for navigation, cache-first for static assets
+// Fetch: network first with offline fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -43,17 +53,16 @@ self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests
   if (url.origin !== self.location.origin) return;
 
-  // Never cache API calls directly via service worker to avoid stale business data
+  // Never cache API calls directly via service worker
   if (url.pathname.startsWith('/api/')) {
     return;
   }
 
-  // Navigation requests (HTML pages)
+  // Navigation requests (HTML pages): Network first, then cache, then offline fallback
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // If valid response, clone into cache
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
@@ -69,13 +78,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: Stale-While-Revalidate
+  // Next.js chunks, scripts, styles: Network-first to always get latest builds, fallback to cache
   if (
+    url.pathname.startsWith('/_next/') ||
     request.destination === 'style' ||
-    request.destination === 'script' ||
-    request.destination === 'image' ||
-    request.destination === 'font'
+    request.destination === 'script'
   ) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Static images and fonts: Stale-While-Revalidate
+  if (request.destination === 'image' || request.destination === 'font') {
     event.respondWith(
       caches.match(request).then((cached) => {
         const fetchPromise = fetch(request)

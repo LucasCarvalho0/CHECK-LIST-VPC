@@ -84,6 +84,24 @@ export default function Sidebar() {
           {user?.role === 'ADMIN' ? 'Administrador' : user?.role === 'OPERATOR' ? 'Operador' : 'Consulta'}
         </div>
         <button
+          onClick={async () => {
+            if ('serviceWorker' in navigator) {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              for (const r of regs) await r.unregister();
+            }
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              for (const k of keys) await caches.delete(k);
+            }
+            window.location.reload();
+          }}
+          className="mt-3 w-full rounded border border-emerald-600/60 bg-emerald-950/40 px-3 py-1.5 text-emerald-300 hover:bg-emerald-900/60 hover:text-white transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5 font-medium"
+          title="Buscar atualizações e limpar cache do aplicativo"
+        >
+          <span>🔄</span>
+          <span>Atualizar App</span>
+        </button>
+        <button
           onClick={logout}
           className="mt-2 w-full rounded border border-slate-600 px-3 py-1.5 text-slate-300 hover:bg-slate-800 transition-colors text-center cursor-pointer"
         >
