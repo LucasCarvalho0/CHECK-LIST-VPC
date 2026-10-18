@@ -204,13 +204,13 @@ export function PwaManager() {
       {showModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
-            {/* Topo com Logo Nissan em Fundo Branco */}
+            {/* Topo com Logo CCE em Fundo Branco */}
             <div className="flex flex-col items-center border-b border-slate-100 bg-slate-50/50 p-6 text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                <img src="/nissan.png" alt="Nissan" className="h-full w-full object-contain" />
+              <div className="flex h-20 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
+                <img src="/grupo-sese.png" alt="CCE QA" className="h-full w-full object-contain" />
               </div>
               <h3 className="mt-3 text-lg font-bold text-slate-900">
-                Instalar Aplicativo Nissan QA?
+                Instalar Aplicativo CCE QA?
               </h3>
               <p className="mt-1 text-xs text-slate-500">
                 Sistema de Checklist de Multimídia e Controle VPC

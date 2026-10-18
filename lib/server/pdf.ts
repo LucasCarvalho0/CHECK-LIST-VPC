@@ -10,27 +10,27 @@ import { serializeChecklist } from './mapper';
 import { PrintableChecklist, renderDocumentHtml } from './pdf-template';
 
 const g = globalThis as unknown as { __browser?: Browser; __logo?: string | null };
-// Se houver cache nulo ou inválido em memória, limpa imediatamente
-if (!g.__logo) g.__logo = undefined;
+// Sempre invalida cache ao inicializar
+g.__logo = undefined;
 
-/** Logotipo Nissan fornecido (nissan.webp, assets/nissan-logo.* ou LOGO_PATH), embutido como data URI. */
+/** Logotipo CCE QA fornecido (grupo-sese.png, grupo-cce.png, cce.png ou LOGO_PATH), embutido como data URI. */
 export function getLogo(): string | null {
   if (g.__logo) return g.__logo;
   const candidates = [
     process.env.LOGO_PATH,
+    join(process.cwd(), 'public', 'grupo-sese.png'),
+    join(process.cwd(), 'public', 'grupo-cce.png'),
+    join(process.cwd(), 'public', 'cce.png'),
+    join(process.cwd(), 'Grupo-Sesé.png'),
+    join(process.cwd(), 'assets', 'grupo-sese.png'),
+    join(process.cwd(), 'assets', 'grupo-cce.png'),
     join(process.cwd(), 'assets', 'nissan.png'),
-    join(process.cwd(), 'assets', 'nissan-logo.png'),
     join(process.cwd(), 'public', 'nissan.png'),
     join(process.cwd(), 'nissan.png'),
-    join(process.cwd(), 'assets', 'nissan.webp'),
-    join(process.cwd(), 'assets', 'nissan-logo.webp'),
-    join(process.cwd(), 'public', 'nissan.webp'),
-    join(process.cwd(), 'nissan.webp'),
-    ...['png', 'webp', 'jpg', 'jpeg', 'svg'].map((e) => join(process.cwd(), 'assets', `nissan-logo.${e}`)),
   ];
   const file = candidates.find((p) => p && existsSync(p));
   if (!file) {
-    console.warn('Logotipo Nissan não encontrado. O PDF mostrará um espaço reservado.');
+    console.warn('Logotipo não encontrado. O PDF mostrará um espaço reservado.');
     return null;
   }
   const ext = extname(file).slice(1).toLowerCase();

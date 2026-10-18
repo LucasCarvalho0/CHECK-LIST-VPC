@@ -34,7 +34,7 @@ export default function Dashboard() {
   return (
     <div className="p-4 md:p-6">
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <h1 className="mr-auto text-xl font-bold">Checklist de Instalação Multimídia Nissan</h1>
+        <h1 className="mr-auto text-xl font-bold">Checklist de Instalação Multimídia – CCE QA</h1>
         {user?.role !== 'VIEWER' && <Link href="/checklists/new" className="rounded bg-nissan px-4 py-2 text-sm font-semibold text-white hover:bg-nissan-dark">Novo Checklist</Link>}
       </div>
       <div className="mb-4 flex flex-wrap gap-3">

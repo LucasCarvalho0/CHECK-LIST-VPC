@@ -41,9 +41,9 @@ export default function Sidebar() {
       <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3.5">
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nissan.png" alt="Nissan" className="h-7 w-auto object-contain brightness-0 invert" />
+          <img src="/grupo-sese.png" alt="CCE QA" className="h-6 w-auto object-contain brightness-0 invert" />
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Nissan QA</div>
+            <div className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">CCE QA</div>
             <div className="text-xs font-bold leading-tight text-slate-100">Checklist Multimídia</div>
           </div>
         </div>
@@ -131,8 +131,8 @@ export default function Sidebar() {
             <span className="block h-0.5 w-6 bg-current rounded" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nissan.png" alt="Nissan" className="h-7 w-auto object-contain brightness-0 invert" />
-          <span className="text-sm font-bold truncate">Checklist Multimídia</span>
+          <img src="/grupo-sese.png" alt="CCE QA" className="h-5 w-auto object-contain brightness-0 invert" />
+          <span className="text-sm font-bold truncate">CCE QA · Checklist Multimídia</span>
         </div>
       </div>
 

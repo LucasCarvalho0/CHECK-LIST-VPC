@@ -26,10 +26,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <div className="flex justify-center mb-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nissan.png" alt="Nissan" className="h-14 w-auto object-contain" />
+          <img src="/grupo-sese.png" alt="CCE QA" className="h-14 w-auto object-contain" />
         </div>
-        <h1 className="mb-1 text-lg font-bold text-center">Checklist de Instalação Multimídia Nissan</h1>
-        <p className="mb-4 text-sm text-slate-500 text-center">Acesso restrito a usuários internos.</p>
+        <h1 className="mb-1 text-lg font-bold text-center">Checklist Multimídia – CCE QA</h1>
+        <p className="mb-4 text-sm text-slate-500 text-center">Acesso restrito · Controle de Qualidade</p>
         <form onSubmit={submit} className="space-y-3">
           <Field label="Usuário"><input autoFocus autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} /></Field>
           <Field label="Senha"><input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>

@@ -1,7 +1,7 @@
 {
-  "name": "Nissan Checklist Multimídia",
-  "short_name": "Nissan QA",
-  "description": "Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - Nissan",
+  "name": "CCE QA Checklist Multimídia",
+  "short_name": "CCE QA",
+  "description": "Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - CCE QA",
   "start_url": "/",
   "id": "/",
   "display": "standalone",

@@ -166,12 +166,12 @@ tr.item td { height: 6.8mm; }
 
 function hdr(logo: string | null, withTitle: boolean) {
   const img = logo
-    ? `<img src="${logo}" alt="Nissan">`
-    : `<span class="logo-ph">NISSAN</span>`;
+    ? `<img src="${logo}" alt="CCE QA">`
+    : `<span class="logo-ph">CCE QA</span>`;
   return (
     `<div class="hd">${img}</div>` +
     `<hr class="hd-line">` +
-    (withTitle ? `<div class="doc-title">CHECK LIST – INSTALAÇÃO MULTIMIDIA</div>` : '')
+    (withTitle ? `<div class="doc-title">CHECK LIST – INSTALAÇÃO MULTIMÍDIA</div>` : '')
   );
 }
 

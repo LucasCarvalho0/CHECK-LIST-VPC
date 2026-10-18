@@ -31,9 +31,12 @@ export default function VehicleFields({
           className={`w-full rounded-lg border p-2 text-sm bg-white ${err('vehicleVersion') ? 'border-red-500' : 'border-slate-300'}`}
         >
           <option value="">Selecione a versão...</option>
+          <option value="L1">L1</option>
           <option value="L2">L2</option>
           <option value="L3">L3</option>
-          <option value="PCD">PCD</option>
+          {values.vehicleVersion && !['L1', 'L2', 'L3'].includes(values.vehicleVersion) && (
+            <option value={values.vehicleVersion}>{values.vehicleVersion}</option>
+          )}
         </select>
       </Field>
       <Field label="Chassi" required error={err('chassis')}>

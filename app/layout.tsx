@@ -11,12 +11,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Checklist de Instalação Multimídia Nissan',
-  description: 'Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - Nissan',
+  title: 'Checklist de Instalação Multimídia – CCE QA',
+  description: 'Sistema de Inspeção de Multimídia e Controle de Qualidade VPC – CCE QA',
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/nissan.png' },
+      { url: '/grupo-sese.png' },
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Nissan QA',
+    title: 'CCE QA',
   },
 };
 
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Nissan QA" />
+        <meta name="apple-mobile-web-app-title" content="CCE QA" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body>

@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 async function generateIcons() {
-  const logoBase64 = readFileSync(join(process.cwd(), 'public', 'nissan.png')).toString('base64');
+  const logoBase64 = readFileSync(join(process.cwd(), 'public', 'grupo-sese.png')).toString('base64');
   const browser = await getBrowser();
 
   const sizes = [
