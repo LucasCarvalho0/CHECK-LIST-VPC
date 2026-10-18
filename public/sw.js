@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sese-qa-v3.0';
+const CACHE_NAME = 'sese-qa-v3.1';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [
@@ -6,6 +6,7 @@ const PRECACHE_ASSETS = [
   '/manifest.json',
   '/offline.html',
   '/grupo-sese.png',
+  '/grupo-sese-white.png',
   '/nissan.png',
   '/icon-192.png',
   '/icon-512.png',
