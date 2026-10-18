@@ -5,7 +5,7 @@ import type { Shift } from '@/types';
 
 export interface VehicleValues {
   chassis: string; vehicleVersion: string; checklistDate: string; checklistTime: string; shift: Shift | '';
-  inspectorQA: string; leaderVPC: string; bpc: string;
+  inspectorQA: string; leaderVPC: string; bpc?: string;
 }
 
 export default function VehicleFields({

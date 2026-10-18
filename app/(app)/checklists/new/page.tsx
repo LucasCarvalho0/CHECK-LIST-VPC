@@ -14,7 +14,7 @@ export default function NewChecklist() {
   const router = useRouter();
   const { user } = useAuth();
   const [v, setV] = useState<VehicleValues>({
-    chassis: '', vehicleVersion: '', checklistDate: todayLocal(), checklistTime: nowLocalTime(), shift: '', inspectorQA: '', leaderVPC: '', bpc: '',
+    chassis: '', vehicleVersion: '', checklistDate: todayLocal(), checklistTime: nowLocalTime(), shift: '', inspectorQA: '', leaderVPC: '',
   });
   const [error, setError] = useState<string | null>(null);
   const [dups, setDups] = useState<Existing[] | null>(null);

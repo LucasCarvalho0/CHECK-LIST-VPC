@@ -34,7 +34,6 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
             <th className="px-3 py-2 whitespace-nowrap">Versão</th>
             <th className="px-3 py-2 whitespace-nowrap">Inspetor QA</th>
             <th className="px-3 py-2 whitespace-nowrap">Líder VPC</th>
-            <th className="px-3 py-2 whitespace-nowrap">BPC</th>
             <th className="px-3 py-2 whitespace-nowrap">Resultado</th>
             <th className="px-3 py-2 whitespace-nowrap">Status</th>
             <th className="px-3 py-2 whitespace-nowrap">Ações</th>
@@ -50,7 +49,6 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
               <td className="px-3 py-2.5 whitespace-nowrap">{c.vehicleVersion}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">{c.inspectorQA}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">{c.leaderVPC}</td>
-              <td className="px-3 py-2.5 whitespace-nowrap">{c.bpc}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">{c.auditResult ? <Badge tone={c.auditResult === 'APPROVED' ? 'green' : 'red'}>{resultLabel(c.auditResult)}</Badge> : '—'}{!!c.nokCount && <span className="ml-1 text-xs text-red-700">({c.nokCount} NOK)</span>}</td>
               <td className="px-3 py-2.5 whitespace-nowrap"><Badge tone={c.status === 'FINALIZED' ? 'blue' : c.status === 'CANCELED' ? 'red' : 'yellow'}>{statusLabel[c.status]}</Badge></td>
               <td className="whitespace-nowrap px-3 py-2.5">
