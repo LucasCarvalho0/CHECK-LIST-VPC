@@ -43,6 +43,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="SESÉ QA" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var v = 'sese-qa-v3.5';
+                if (localStorage.getItem('sese_build_tag') !== v) {
+                  localStorage.setItem('sese_build_tag', v);
+                  localStorage.removeItem('nissan_pwa_installed');
+                  sessionStorage.removeItem('nissan_pwa_dismissed');
+                  if ('caches' in window) {
+                    caches.keys().then(function(keys) {
+                      keys.forEach(function(k) { caches.delete(k); });
+                    });
+                  }
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                      regs.forEach(function(r) { r.unregister(); });
+                    });
+                  }
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <AuthProvider>
