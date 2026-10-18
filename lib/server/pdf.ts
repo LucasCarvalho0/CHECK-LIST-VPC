@@ -13,24 +13,19 @@ const g = globalThis as unknown as { __browser?: Browser; __logo?: string | null
 // Sempre invalida cache ao inicializar
 g.__logo = undefined;
 
-/** Logotipo SESÉ QA fornecido (grupo-sese.png, grupo-cce.png, cce.png ou LOGO_PATH), embutido como data URI. */
+/** Logotipo Nissan padrão para impressão de PDF (nissan.png), embutido como data URI. */
 export function getLogo(): string | null {
   if (g.__logo) return g.__logo;
   const candidates = [
     process.env.LOGO_PATH,
-    join(process.cwd(), 'public', 'grupo-sese.png'),
-    join(process.cwd(), 'public', 'grupo-cce.png'),
-    join(process.cwd(), 'public', 'cce.png'),
-    join(process.cwd(), 'Grupo-Sesé.png'),
-    join(process.cwd(), 'assets', 'grupo-sese.png'),
-    join(process.cwd(), 'assets', 'grupo-cce.png'),
-    join(process.cwd(), 'assets', 'nissan.png'),
     join(process.cwd(), 'public', 'nissan.png'),
+    join(process.cwd(), 'assets', 'nissan.png'),
     join(process.cwd(), 'nissan.png'),
+    join(process.cwd(), 'assets', 'nissan-logo.png'),
   ];
   const file = candidates.find((p) => p && existsSync(p));
   if (!file) {
-    console.warn('Logotipo não encontrado. O PDF mostrará um espaço reservado.');
+    console.warn('Logotipo Nissan não encontrado. O PDF mostrará um espaço reservado.');
     return null;
   }
   const ext = extname(file).slice(1).toLowerCase();
