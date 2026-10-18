@@ -11,8 +11,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Checklist de Instalação Multimídia – CCE QA',
-  description: 'Sistema de Inspeção de Multimídia e Controle de Qualidade VPC – CCE QA',
+  title: 'Checklist Multimídia – SESÉ QA',
+  description: 'Sistema de Inspeção de Multimídia e Controle de Qualidade VPC – SESÉ QA',
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'CCE QA',
+    title: 'SESÉ QA',
   },
 };
 
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="CCE QA" />
+        <meta name="apple-mobile-web-app-title" content="SESÉ QA" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body>

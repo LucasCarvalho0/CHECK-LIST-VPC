@@ -166,8 +166,8 @@ tr.item td { height: 6.8mm; }
 
 function hdr(logo: string | null, withTitle: boolean) {
   const img = logo
-    ? `<img src="${logo}" alt="CCE QA">`
-    : `<span class="logo-ph">CCE QA</span>`;
+    ? `<img src="${logo}" alt="SESÉ QA">`
+    : `<span class="logo-ph">SESÉ QA</span>`;
   return (
     `<div class="hd">${img}</div>` +
     `<hr class="hd-line">` +

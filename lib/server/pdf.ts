@@ -13,7 +13,7 @@ const g = globalThis as unknown as { __browser?: Browser; __logo?: string | null
 // Sempre invalida cache ao inicializar
 g.__logo = undefined;
 
-/** Logotipo CCE QA fornecido (grupo-sese.png, grupo-cce.png, cce.png ou LOGO_PATH), embutido como data URI. */
+/** Logotipo SESÉ QA fornecido (grupo-sese.png, grupo-cce.png, cce.png ou LOGO_PATH), embutido como data URI. */
 export function getLogo(): string | null {
   if (g.__logo) return g.__logo;
   const candidates = [

@@ -1,7 +1,7 @@
 {
-  "name": "CCE QA Checklist Multimídia",
-  "short_name": "CCE QA",
-  "description": "Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - CCE QA",
+  "name": "Checklist Multimídia – SESÉ QA",
+  "short_name": "SESÉ QA",
+  "description": "Sistema de Inspeção de Multimídia e Controle de Qualidade VPC - SESÉ QA",
   "start_url": "/",
   "id": "/",
   "display": "standalone",

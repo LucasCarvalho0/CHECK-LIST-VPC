@@ -207,10 +207,10 @@ export function PwaManager() {
             {/* Topo com Logo CCE em Fundo Branco */}
             <div className="flex flex-col items-center border-b border-slate-100 bg-slate-50/50 p-6 text-center">
               <div className="flex h-20 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
-                <img src="/grupo-sese.png" alt="CCE QA" className="h-full w-full object-contain" />
+                <img src="/grupo-sese.png" alt="SESÉ QA" className="h-full w-full object-contain" />
               </div>
               <h3 className="mt-3 text-lg font-bold text-slate-900">
-                Instalar Aplicativo CCE QA?
+                Instalar Aplicativo SESÉ QA?
               </h3>
               <p className="mt-1 text-xs text-slate-500">
                 Sistema de Checklist de Multimídia e Controle VPC
