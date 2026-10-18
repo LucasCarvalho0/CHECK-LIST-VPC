@@ -52,15 +52,23 @@ export const listChecklistsSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(200).default(20),
   search: z.string().transform(normalizeChassis).optional(),
   date: date.optional(), dateFrom: date.optional(), dateTo: date.optional(),
-  shift: shiftEnum.optional(), status: statusEnum.optional(), auditResult: resultEnum.optional(),
+  shift: shiftEnum.optional(), shiftOvernight: z.coerce.boolean().optional(),
+  status: statusEnum.optional(), auditResult: resultEnum.optional(),
   inspectorQA: z.string().optional(), leaderVPC: z.string().optional(), bpc: z.string().optional(),
   order: z.enum(['asc', 'desc']).default('desc'),
 });
 
-export const summaryQuerySchema = z.object({ date: date.optional(), dateFrom: date.optional(), dateTo: date.optional(), shift: shiftEnum.optional() });
+export const summaryQuerySchema = z.object({
+  date: date.optional(),
+  dateFrom: date.optional(),
+  dateTo: date.optional(),
+  shift: shiftEnum.optional(),
+  shiftOvernight: z.coerce.boolean().optional(),
+});
 const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
 export const dailyQuerySchema = z.object({
-  date: date, shift: shiftEnum.optional(), blankSeparator: bool.optional(), includeInProgress: bool.optional(),
+  date: date, shift: shiftEnum.optional(), shiftOvernight: z.coerce.boolean().optional(),
+  blankSeparator: bool.optional(), includeInProgress: bool.optional(),
 });
 export const nonconformityQuerySchema = z.object({ dateFrom: date.optional(), dateTo: date.optional(), shift: shiftEnum.optional() });
 export const dailyPdfSchema = z.object({
