@@ -76,7 +76,7 @@ export default function VehicleFields({
       <Field label="Inspetor QA" required error={err('inspectorQA')}>
         <select
           id="f-inspectorQA"
-          value={values.inspectorQA}
+          value={values.inspectorQA === 'Lucas Carvalho' ? '' : values.inspectorQA}
           disabled={readOnly}
           onChange={(e) => onChange('inspectorQA', e.target.value)}
           className={`w-full rounded-lg border p-2 text-sm bg-white ${err('inspectorQA') ? 'border-red-500' : 'border-slate-300'}`}
@@ -84,7 +84,7 @@ export default function VehicleFields({
           <option value="">Selecione o inspetor...</option>
           <option value="José Augusto">José Augusto (2º Turno)</option>
           <option value="Júlio Carvalho">Júlio Carvalho (2º Turno)</option>
-          {values.inspectorQA && !['José Augusto', 'Júlio Carvalho'].includes(values.inspectorQA) && (
+          {values.inspectorQA && !['José Augusto', 'Júlio Carvalho', 'Lucas Carvalho'].includes(values.inspectorQA) && (
             <option value={values.inspectorQA}>{values.inspectorQA}</option>
           )}
         </select>

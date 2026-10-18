@@ -38,7 +38,7 @@ export default function NewChecklist() {
         ? 'José Augusto'
         : uname === 'julio' || name.includes('julio') || name.includes('júlio')
         ? 'Júlio Carvalho'
-        : user.name;
+        : '';
 
     setV((prev) => ({
       ...prev,
