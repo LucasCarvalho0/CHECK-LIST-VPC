@@ -61,11 +61,11 @@ async function main() {
 
   // 1º Turno: Líder Washington Wallace e Operadores (Márcio Luis e Tássio de Almeida)
   const firstShiftUsers = [
-    { username: 'washington', name: 'Washington Wallace', password: '12345678', role: 'ADMIN' as const, shift: 'FIRST' as const },
-    { username: '503175', name: 'Márcio Luis', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
-    { username: '504033', name: 'Tássio de Almeida', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
-    { username: 'marcio', name: 'Márcio Luis', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
-    { username: 'tassio', name: 'Tássio de Almeida', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: 'washington', name: 'Washington Wallace', password: 'Digital-10@', role: 'ADMIN' as const, shift: 'FIRST' as const },
+    { username: '503175', name: 'Márcio Luis', password: 'Mudar@123', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: '504033', name: 'Tássio de Almeida', password: 'Mudar@124', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: 'marcio', name: 'Márcio Luis', password: 'Mudar@123', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: 'tassio', name: 'Tássio de Almeida', password: 'Mudar@124', role: 'OPERATOR' as const, shift: 'FIRST' as const },
   ];
 
   for (const op of firstShiftUsers) {
