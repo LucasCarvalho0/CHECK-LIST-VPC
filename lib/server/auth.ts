@@ -3,8 +3,10 @@ import * as bcrypt from 'bcryptjs';
 import { HttpError } from './http';
 import { prisma } from './prisma';
 
+import type { Shift } from '@prisma/client';
+
 export type RoleName = 'ADMIN' | 'OPERATOR' | 'VIEWER';
-export interface AuthUser { id: string; name: string; username: string; role: RoleName }
+export interface AuthUser { id: string; name: string; username: string; role: RoleName; shift?: Shift | null }
 
 const secret = () => {
   const s = process.env.JWT_SECRET;
@@ -29,7 +31,7 @@ export async function authenticate(req: Request, roles?: RoleName[]): Promise<Au
   try { sub = (await jwtVerify(token, secret())).payload.sub; } catch { throw new HttpError(401, 'Sessão inválida ou expirada.'); }
   const u = sub ? await prisma.user.findUnique({ where: { id: sub } }) : null;
   if (!u || !u.active) throw new HttpError(401, 'Usuário inativo ou inexistente.');
-  const user: AuthUser = { id: u.id, name: u.name, username: u.username, role: u.role };
+  const user: AuthUser = { id: u.id, name: u.name, username: u.username, role: u.role, shift: u.shift };
   if (roles && !roles.includes(user.role)) throw new HttpError(403, 'Você não tem permissão para esta ação.');
   return user;
 }
@@ -51,5 +53,8 @@ export async function login(req: Request, username: string, password: string) {
   // Mesma resposta para usuário inexistente, senha errada ou inativo (evita enumeração).
   const ok = !!user && user.active && (await bcrypt.compare(password, user.passwordHash));
   if (!user || !ok) throw new HttpError(401, 'Usuário ou senha inválidos.');
-  return { accessToken: await signToken(user.id), user: { id: user.id, name: user.name, username: user.username, role: user.role } };
+  return {
+    accessToken: await signToken(user.id),
+    user: { id: user.id, name: user.name, username: user.username, role: user.role, shift: user.shift },
+  };
 }

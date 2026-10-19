@@ -27,31 +27,63 @@ async function main() {
         username: '116221',
         passwordHash: await bcrypt.hash('116221@', 12),
         role: 'ADMIN',
+        shift: 'SECOND',
       },
     });
     console.log('Administrador "Lucas Carvalho" (116221) criado.');
+  } else if (!lucas.shift) {
+    await prisma.user.update({ where: { username: '116221' }, data: { shift: 'SECOND' } });
   }
 
-  // Operadores do 2º Turno: José Augusto e Júlio Carvalho
-  const operators = [
-    { username: 'augusto', name: 'José Augusto', password: '12345678' },
-    { username: 'julio', name: 'Júlio Carvalho', password: '12345678' },
+  // Operadores do 2º Turno
+  const secondShiftUsers = [
+    { username: 'augusto', name: 'José Augusto', password: '12345678', role: 'OPERATOR' as const, shift: 'SECOND' as const },
+    { username: 'julio', name: 'Júlio Carvalho', password: '12345678', role: 'OPERATOR' as const, shift: 'SECOND' as const },
+    { username: '499277', name: 'JOSE AUGUSTO', password: '12345678', role: 'OPERATOR' as const, shift: 'SECOND' as const },
+    { username: '501425', name: 'JULIO CESAR', password: '12345678', role: 'OPERATOR' as const, shift: 'SECOND' as const },
   ];
 
-  for (const op of operators) {
+  for (const op of secondShiftUsers) {
     await prisma.user.upsert({
       where: { username: op.username },
       create: {
         name: op.name,
         username: op.username,
         passwordHash: await bcrypt.hash(op.password, 12),
-        role: 'OPERATOR',
+        role: op.role,
+        shift: op.shift,
+      },
+      update: {
+        shift: op.shift,
+      },
+    });
+  }
+
+  // 1º Turno: Líder Washington Wallace e Operadores (Márcio Luis e Tássio de Almeida)
+  const firstShiftUsers = [
+    { username: 'washington', name: 'Washington Wallace', password: '12345678', role: 'ADMIN' as const, shift: 'FIRST' as const },
+    { username: '503175', name: 'Márcio Luis', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: '504033', name: 'Tássio de Almeida', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: 'marcio', name: 'Márcio Luis', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+    { username: 'tassio', name: 'Tássio de Almeida', password: '12345678', role: 'OPERATOR' as const, shift: 'FIRST' as const },
+  ];
+
+  for (const op of firstShiftUsers) {
+    await prisma.user.upsert({
+      where: { username: op.username },
+      create: {
+        name: op.name,
+        username: op.username,
+        passwordHash: await bcrypt.hash(op.password, 12),
+        role: op.role,
+        shift: op.shift,
       },
       update: {
         name: op.name,
+        role: op.role,
+        shift: op.shift,
       },
     });
-    console.log(`Operador "${op.name}" (${op.username}) sincronizado.`);
   }
 }
 

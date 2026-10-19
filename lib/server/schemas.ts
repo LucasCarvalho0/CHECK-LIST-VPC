@@ -83,8 +83,14 @@ export const createUserSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome.'),
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,40}$/, 'Login deve ter 3-40 caracteres (letras minúsculas, números, . _ -).'),
   password: pwd, role: roleEnum,
+  shift: shiftEnum.nullable().optional(),
 }).strict();
-export const updateUserSchema = z.object({ name: z.string().trim().min(1).optional(), role: roleEnum.optional(), password: pwd.optional() }).strict();
+export const updateUserSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  role: roleEnum.optional(),
+  shift: shiftEnum.nullable().optional(),
+  password: pwd.optional(),
+}).strict();
 export const setActiveSchema = z.object({ active: z.boolean() }).strict();
 
 export type CreateChecklistDto = z.infer<typeof createChecklistSchema>;

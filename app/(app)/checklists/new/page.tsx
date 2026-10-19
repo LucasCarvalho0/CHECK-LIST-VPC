@@ -8,6 +8,8 @@ import { nowLocalTime, todayLocal, statusLabel, shiftLabel } from '@/lib/format'
 import { Alert, Btn, Card } from '@/components/ui';
 import VehicleFields, { VehicleValues } from '@/components/checklist/VehicleFields';
 
+import { detectUserShift, detectDefaultInspector, SHIFT_CONFIGS } from '@/lib/shared/shifts';
+
 interface Existing { id: string; status: import('@/types').Status; checklistTime: string; shift: 'FIRST' | 'SECOND' | null }
 
 export default function NewChecklist() {
@@ -22,28 +24,14 @@ export default function NewChecklist() {
 
   useEffect(() => {
     if (!user) return;
-    const uname = user.username.toLowerCase();
-    const name = user.name.toLowerCase();
-    const isSecondShift =
-      uname === 'augusto' ||
-      uname === 'julio' ||
-      uname === '116221' ||
-      name.includes('augusto') ||
-      name.includes('júlio') ||
-      name.includes('julio') ||
-      name.includes('lucas');
-
-    const defaultInspector =
-      uname === 'augusto' || name.includes('augusto')
-        ? 'José Augusto'
-        : uname === 'julio' || name.includes('julio') || name.includes('júlio')
-        ? 'Júlio Carvalho'
-        : '';
+    const detectedShift = detectUserShift(user);
+    const defaultInspector = detectDefaultInspector(user);
+    const defaultLeader = detectedShift ? SHIFT_CONFIGS[detectedShift].leaderVPC : '';
 
     setV((prev) => ({
       ...prev,
-      shift: prev.shift || (isSecondShift ? 'SECOND' : prev.shift),
-      leaderVPC: prev.leaderVPC || (isSecondShift ? 'Janaína Mendes' : prev.leaderVPC),
+      shift: prev.shift || detectedShift || '',
+      leaderVPC: prev.leaderVPC || defaultLeader || '',
       inspectorQA: prev.inspectorQA || defaultInspector,
     }));
   }, [user]);

@@ -4,12 +4,16 @@ import { api, ApiError, downloadBlob, qs } from '@/services/api';
 import { brDate, resultLabel, shiftLabel, statusLabel, todayLocal } from '@/lib/format';
 import { Alert, Btn, Card, Spinner } from '@/components/ui';
 
+import { useAuth } from '@/hooks/useAuth';
+import { detectUserShift } from '@/lib/shared/shifts';
+
 interface Daily {
   date: string; vehicles: { id: string; chassis: string; time: string; shift: 'FIRST' | 'SECOND' | null; status: import('@/types').Status; auditResult: 'APPROVED' | 'REPROVED' | null }[];
   pages: { vehicles: number; contentPages: number; blankPages: number; totalPages: number; sheetsDuplex: number };
 }
 
 export default function PrintDayPage() {
+  const { user } = useAuth();
   const [date, setDate] = useState(todayLocal());
   const [shift, setShift] = useState('');
   const [blank, setBlank] = useState(false);
@@ -19,6 +23,12 @@ export default function PrintDayPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const userShift = detectUserShift(user);
+    if (userShift) setShift(userShift);
+  }, [user]);
 
   useEffect(() => {
     setData(null); setError(null); setExcluded(new Set());

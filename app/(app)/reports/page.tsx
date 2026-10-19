@@ -4,16 +4,26 @@ import { api, qs } from '@/services/api';
 import { brDate, shiftLabel, todayLocal } from '@/lib/format';
 import { Alert, Card, Spinner } from '@/components/ui';
 
+import { useAuth } from '@/hooks/useAuth';
+import { detectUserShift } from '@/lib/shared/shifts';
+
 interface Summary { total: number; inProgress: number; finalized: number; approved: number; reproved: number; pendingRepair: number; nokItems: number }
 interface NC { totalNok: number; items: { itemCode: string; label: string; count: number; occurrences: { checklistId: string; chassis: string; date: string; time: string; shift: 'FIRST' | 'SECOND' | null; observation: string | null }[] }[] }
 
 export default function ReportsPage() {
+  const { user } = useAuth();
   const [dateFrom, setFrom] = useState(todayLocal());
   const [dateTo, setTo] = useState(todayLocal());
   const [shift, setShift] = useState('');
   const [sum, setSum] = useState<Summary | null>(null);
   const [nc, setNc] = useState<NC | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const userShift = detectUserShift(user);
+    if (userShift) setShift(userShift);
+  }, [user]);
 
   useEffect(() => {
     setSum(null); setNc(null); setError(null);

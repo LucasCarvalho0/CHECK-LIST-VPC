@@ -17,6 +17,8 @@ interface Summary {
   nokItems: number;
 }
 
+import { detectUserShift } from '@/lib/shared/shifts';
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [filterMode, setFilterMode] = useState<'single' | 'range'>('single');
@@ -25,6 +27,15 @@ export default function Dashboard() {
   const [dateTo, setDateTo] = useState(todayLocal());
   const [shift, setShift] = useState<'FIRST' | 'SECOND' | ''>('');
   const [shiftOvernight, setShiftOvernight] = useState(true);
+
+  // Inicializa o filtro de turno com o turno do usuário logado
+  useEffect(() => {
+    if (!user) return;
+    const userShift = detectUserShift(user);
+    if (userShift) {
+      setShift(userShift);
+    }
+  }, [user]);
 
   const [sum, setSum] = useState<Summary | null>(null);
   const [rows, setRows] = useState<Checklist[] | null>(null);
@@ -159,13 +170,21 @@ export default function Dashboard() {
           )}
 
           <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700 min-w-[200px]">
-            Turno de Produção
+            <span>
+              Turno de Produção
+              {user?.role === 'OPERATOR' && (
+                <span className="ml-1 text-[11px] font-normal text-blue-600">(Exclusivo do seu turno)</span>
+              )}
+            </span>
             <select
               value={shift}
+              disabled={user?.role === 'OPERATOR'}
               onChange={(e) => setShift(e.target.value as any)}
-              className="rounded-lg border border-slate-300 p-2 text-sm bg-white"
+              className={`rounded-lg border border-slate-300 p-2 text-sm bg-white ${
+                user?.role === 'OPERATOR' ? 'bg-slate-100 cursor-not-allowed text-slate-700 font-semibold' : ''
+              }`}
             >
-              <option value="">Todos os Turnos</option>
+              {user?.role !== 'OPERATOR' && <option value="">Todos os Turnos</option>}
               <option value="FIRST">1º Turno (06h às 16h)</option>
               <option value="SECOND">2º Turno (16h às 02h da madrugada)</option>
             </select>

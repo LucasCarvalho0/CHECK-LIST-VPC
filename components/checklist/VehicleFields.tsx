@@ -62,12 +62,14 @@ export default function VehicleFields({
                 disabled={readOnly}
                 onChange={() => {
                   onChange('shift', s);
-                  if (s === 'SECOND' && (!values.leaderVPC || values.leaderVPC === '')) {
+                  if (s === 'FIRST' && (!values.leaderVPC || values.leaderVPC === 'Janaína Mendes')) {
+                    onChange('leaderVPC', 'Washington Wallace');
+                  } else if (s === 'SECOND' && (!values.leaderVPC || values.leaderVPC === 'Washington Wallace' || values.leaderVPC === 'Washington')) {
                     onChange('leaderVPC', 'Janaína Mendes');
                   }
                 }}
               />
-              <span className="text-sm font-medium">{s === 'FIRST' ? '1º Turno' : '2º Turno'}</span>
+              <span className="text-sm font-medium">{s === 'FIRST' ? '1º Turno (Washington Wallace)' : '2º Turno (Janaína Mendes)'}</span>
             </label>
           ))}
         </div>
@@ -76,15 +78,35 @@ export default function VehicleFields({
       <Field label="Inspetor QA" required error={err('inspectorQA')}>
         <select
           id="f-inspectorQA"
-          value={values.inspectorQA === 'Lucas Carvalho' ? '' : values.inspectorQA}
+          value={values.inspectorQA}
           disabled={readOnly}
           onChange={(e) => onChange('inspectorQA', e.target.value)}
           className={`w-full rounded-lg border p-2 text-sm bg-white ${err('inspectorQA') ? 'border-red-500' : 'border-slate-300'}`}
         >
           <option value="">Selecione o inspetor...</option>
-          <option value="José Augusto">José Augusto (2º Turno)</option>
-          <option value="Júlio Carvalho">Júlio Carvalho (2º Turno)</option>
-          {values.inspectorQA && !['José Augusto', 'Júlio Carvalho', 'Lucas Carvalho'].includes(values.inspectorQA) && (
+          {values.shift === 'FIRST' ? (
+            <>
+              <option value="Márcio Luis">Márcio Luis (1º Turno)</option>
+              <option value="Tássio de Almeida">Tássio de Almeida (1º Turno)</option>
+            </>
+          ) : values.shift === 'SECOND' ? (
+            <>
+              <option value="José Augusto">José Augusto (2º Turno)</option>
+              <option value="Júlio Carvalho">Júlio Carvalho (2º Turno)</option>
+            </>
+          ) : (
+            <>
+              <optgroup label="1º Turno">
+                <option value="Márcio Luis">Márcio Luis</option>
+                <option value="Tássio de Almeida">Tássio de Almeida</option>
+              </optgroup>
+              <optgroup label="2º Turno">
+                <option value="José Augusto">José Augusto</option>
+                <option value="Júlio Carvalho">Júlio Carvalho</option>
+              </optgroup>
+            </>
+          )}
+          {values.inspectorQA && !['Márcio Luis', 'Tássio de Almeida', 'Márcio', 'Tássio', 'José Augusto', 'Júlio Carvalho', 'Lucas Carvalho'].includes(values.inspectorQA) && (
             <option value={values.inspectorQA}>{values.inspectorQA}</option>
           )}
         </select>
@@ -96,8 +118,29 @@ export default function VehicleFields({
             <span>Preenchimento rápido:</span>
             <button
               type="button"
-              onClick={() => onChange('leaderVPC', 'Janaína Mendes')}
-              className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-200 transition"
+              onClick={() => {
+                onChange('leaderVPC', 'Washington Wallace');
+                if (!values.shift) onChange('shift', 'FIRST');
+              }}
+              className={`rounded px-2 py-0.5 font-medium transition ${
+                values.leaderVPC === 'Washington Wallace' || values.leaderVPC === 'Washington' || values.shift === 'FIRST'
+                  ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              Washington Wallace (1º Turno)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onChange('leaderVPC', 'Janaína Mendes');
+                if (!values.shift) onChange('shift', 'SECOND');
+              }}
+              className={`rounded px-2 py-0.5 font-medium transition ${
+                values.leaderVPC === 'Janaína Mendes' || values.shift === 'SECOND'
+                  ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
               Janaína Mendes (2º Turno)
             </button>

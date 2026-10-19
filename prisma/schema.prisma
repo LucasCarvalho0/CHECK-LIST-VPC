@@ -55,6 +55,7 @@ model User {
   username     String   @unique
   passwordHash String
   role         Role     @default(OPERATOR)
+  shift        Shift?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

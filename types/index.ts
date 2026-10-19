@@ -4,7 +4,7 @@ export type Status = 'IN_PROGRESS' | 'FINALIZED' | 'CANCELED';
 export type AuditResult = 'APPROVED' | 'REPROVED';
 export type RepairStatus = 'OK' | 'NOK' | 'NOT_APPLICABLE';
 
-export interface User { id: string; name: string; username: string; role: Role; active?: boolean }
+export interface User { id: string; name: string; username: string; role: Role; shift?: Shift | null; active?: boolean }
 
 export interface ItemResponse { itemCode: string; section: string; itemLabelSnapshot: string; response: 'OK' | 'NOK' | 'NA' | 'UNANSWERED'; observation: string | null }
 

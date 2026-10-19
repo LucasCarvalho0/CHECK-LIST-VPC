@@ -7,3 +7,4 @@ backups/*.dump
 *.log
 next-env.d.ts
 tsconfig.tsbuildinfo
+.vscode

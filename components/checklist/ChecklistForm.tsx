@@ -416,16 +416,52 @@ export default function ChecklistForm({ id }: { id: string }) {
                     <input value={form.repairInspectorQA} disabled={readOnly} onChange={(e) => setField('repairInspectorQA', e.target.value)} className="w-full" />
                     {!readOnly && (
                       <div className="flex flex-wrap gap-1 text-xs">
-                        {(['José Augusto', 'Júlio Carvalho'] as const).map((name) => (
-                          <button
-                            key={name}
-                            type="button"
-                            onClick={() => setField('repairInspectorQA', name)}
-                            className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-200 transition"
-                          >
-                            {name}
-                          </button>
-                        ))}
+                        {form.shift === 'FIRST' ? (
+                          (['Márcio Luis', 'Tássio de Almeida'] as const).map((name) => (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => setField('repairInspectorQA', name)}
+                              className={`rounded px-2 py-0.5 font-medium transition ${
+                                form.repairInspectorQA === name
+                                  ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {name}
+                            </button>
+                          ))
+                        ) : form.shift === 'SECOND' ? (
+                          (['José Augusto', 'Júlio Carvalho'] as const).map((name) => (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => setField('repairInspectorQA', name)}
+                              className={`rounded px-2 py-0.5 font-medium transition ${
+                                form.repairInspectorQA === name
+                                  ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {name}
+                            </button>
+                          ))
+                        ) : (
+                          (['Márcio Luis', 'Tássio de Almeida', 'José Augusto', 'Júlio Carvalho'] as const).map((name) => (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => setField('repairInspectorQA', name)}
+                              className={`rounded px-2 py-0.5 font-medium transition ${
+                                form.repairInspectorQA === name
+                                  ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {name}
+                            </button>
+                          ))
+                        )}
                       </div>
                     )}
                   </div>
@@ -437,8 +473,23 @@ export default function ChecklistForm({ id }: { id: string }) {
                       <div className="flex flex-wrap gap-1 text-xs">
                         <button
                           type="button"
+                          onClick={() => setField('repairLeaderVPC', 'Washington Wallace')}
+                          className={`rounded px-2 py-0.5 font-medium transition ${
+                            form.repairLeaderVPC === 'Washington Wallace' || form.repairLeaderVPC === 'Washington' || form.shift === 'FIRST'
+                              ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          Washington Wallace (1º Turno)
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setField('repairLeaderVPC', 'Janaína Mendes')}
-                          className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-200 transition"
+                          className={`rounded px-2 py-0.5 font-medium transition ${
+                            form.repairLeaderVPC === 'Janaína Mendes' || form.shift === 'SECOND'
+                              ? 'bg-blue-100 text-blue-800 border border-blue-300 font-semibold'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
                         >
                           Janaína Mendes (2º Turno)
                         </button>
