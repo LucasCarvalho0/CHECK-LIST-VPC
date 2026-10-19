@@ -107,3 +107,29 @@ export function detectDefaultInspector(user?: { username?: string; name?: string
 
   return '';
 }
+
+/**
+ * Determina o turno efetivo para consultas, relatórios e dashboards.
+ * Se o usuário for OPERADOR (ou pertencer a um turno específico), restringe exclusivamente ao turno dele
+ * para evitar misturar informações entre turnos.
+ */
+export function resolveEffectiveShift(
+  user?: { role?: string; username?: string; name?: string; shift?: Shift | null } | null,
+  requestedShift?: Shift | ''
+): Shift | undefined {
+  if (!user) return requestedShift || undefined;
+  const userShift = detectUserShift(user);
+
+  // Operadores e usuários com turno fixo têm seus dados restritos ao próprio turno
+  if (user.role === 'OPERATOR' && userShift) {
+    return userShift;
+  }
+
+  // Se o usuário solicitou explicitamente um turno
+  if (requestedShift) {
+    return requestedShift;
+  }
+
+  // Se for admin/líder com turno associado e não escolheu outro, usa o do seu turno por padrão
+  return userShift || undefined;
+}

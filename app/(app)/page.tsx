@@ -17,10 +17,10 @@ interface Summary {
   nokItems: number;
 }
 
-import { detectUserShift } from '@/lib/shared/shifts';
+import { detectUserShift, resolveEffectiveShift } from '@/lib/shared/shifts';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [filterMode, setFilterMode] = useState<'single' | 'range'>('single');
   const [date, setDate] = useState(todayLocal());
   const [dateFrom, setDateFrom] = useState(todayLocal());
@@ -32,10 +32,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
     const userShift = detectUserShift(user);
-    if (userShift) {
+    if (userShift && !shift) {
       setShift(userShift);
     }
-  }, [user]);
+  }, [user, shift]);
 
   const [sum, setSum] = useState<Summary | null>(null);
   const [rows, setRows] = useState<Checklist[] | null>(null);
@@ -58,9 +58,11 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    if (loading) return;
     setError(null);
+    const effectiveShift = resolveEffectiveShift(user, shift);
     const params: Record<string, any> = {
-      shift: shift || undefined,
+      shift: effectiveShift,
       shiftOvernight,
       pageSize: 20,
     };
@@ -81,7 +83,7 @@ export default function Dashboard() {
         setRows(l.data);
       })
       .catch((e) => setError(e.message));
-  }, [filterMode, date, dateFrom, dateTo, shift, shiftOvernight]);
+  }, [loading, user, filterMode, date, dateFrom, dateTo, shift, shiftOvernight]);
 
   const cards: [string, number | undefined, string][] = [
     [shift === 'SECOND' ? 'Total 2º Turno (com madrugada)' : 'Total na Jornada', sum?.total, 'text-slate-900'],

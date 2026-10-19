@@ -5,10 +5,13 @@ import { handle, readBody, readQuery } from '@/lib/server/http';
 import { authenticate } from '@/lib/server/auth';
 import { createChecklist, listChecklists } from '@/lib/server/checklists';
 import { createChecklistSchema, listChecklistsSchema } from '@/lib/server/schemas';
+import { resolveEffectiveShift } from '@/lib/shared/shifts';
 
 export const GET = handle(async (req) => {
-  await authenticate(req);
-  return listChecklists(readQuery(req, listChecklistsSchema));
+  const user = await authenticate(req);
+  const q = readQuery(req, listChecklistsSchema);
+  q.shift = resolveEffectiveShift(user, q.shift);
+  return listChecklists(q);
 });
 
 export const POST = handle(async (req) => {

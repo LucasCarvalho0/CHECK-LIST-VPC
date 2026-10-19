@@ -5,7 +5,7 @@ import { brDate, resultLabel, shiftLabel, statusLabel, todayLocal } from '@/lib/
 import { Alert, Btn, Card, Spinner } from '@/components/ui';
 
 import { useAuth } from '@/hooks/useAuth';
-import { detectUserShift } from '@/lib/shared/shifts';
+import { detectUserShift, resolveEffectiveShift } from '@/lib/shared/shifts';
 
 interface Daily {
   date: string; vehicles: { id: string; chassis: string; time: string; shift: 'FIRST' | 'SECOND' | null; status: import('@/types').Status; auditResult: 'APPROVED' | 'REPROVED' | null }[];
@@ -13,7 +13,7 @@ interface Daily {
 }
 
 export default function PrintDayPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [date, setDate] = useState(todayLocal());
   const [shift, setShift] = useState('');
   const [blank, setBlank] = useState(false);
@@ -27,13 +27,15 @@ export default function PrintDayPage() {
   useEffect(() => {
     if (!user) return;
     const userShift = detectUserShift(user);
-    if (userShift) setShift(userShift);
-  }, [user]);
+    if (userShift && !shift) setShift(userShift);
+  }, [user, shift]);
 
   useEffect(() => {
+    if (loading) return;
     setData(null); setError(null); setExcluded(new Set());
-    api.get<Daily>(`/reports/daily${qs({ date, shift, blankSeparator: blank, includeInProgress: !onlyFinal })}`).then(setData).catch((e) => setError(e.message));
-  }, [date, shift, blank, onlyFinal]);
+    const effectiveShift = resolveEffectiveShift(user, shift as any);
+    api.get<Daily>(`/reports/daily${qs({ date, shift: effectiveShift, blankSeparator: blank, includeInProgress: !onlyFinal })}`).then(setData).catch((e) => setError(e.message));
+  }, [loading, user, date, shift, blank, onlyFinal]);
 
   const selected = data?.vehicles.filter((v) => !excluded.has(v.id)) ?? [];
   const content = selected.length * 3;

@@ -5,13 +5,13 @@ import { brDate, shiftLabel, todayLocal } from '@/lib/format';
 import { Alert, Card, Spinner } from '@/components/ui';
 
 import { useAuth } from '@/hooks/useAuth';
-import { detectUserShift } from '@/lib/shared/shifts';
+import { detectUserShift, resolveEffectiveShift } from '@/lib/shared/shifts';
 
 interface Summary { total: number; inProgress: number; finalized: number; approved: number; reproved: number; pendingRepair: number; nokItems: number }
 interface NC { totalNok: number; items: { itemCode: string; label: string; count: number; occurrences: { checklistId: string; chassis: string; date: string; time: string; shift: 'FIRST' | 'SECOND' | null; observation: string | null }[] }[] }
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [dateFrom, setFrom] = useState(todayLocal());
   const [dateTo, setTo] = useState(todayLocal());
   const [shift, setShift] = useState('');
@@ -22,14 +22,19 @@ export default function ReportsPage() {
   useEffect(() => {
     if (!user) return;
     const userShift = detectUserShift(user);
-    if (userShift) setShift(userShift);
-  }, [user]);
+    if (userShift && !shift) setShift(userShift);
+  }, [user, shift]);
 
   useEffect(() => {
+    if (loading) return;
     setSum(null); setNc(null); setError(null);
-    Promise.all([api.get<Summary>(`/reports/summary${qs({ dateFrom, dateTo, shift })}`), api.get<NC>(`/reports/nonconformities${qs({ dateFrom, dateTo, shift })}`)])
+    const effectiveShift = resolveEffectiveShift(user, shift as any);
+    Promise.all([
+      api.get<Summary>(`/reports/summary${qs({ dateFrom, dateTo, shift: effectiveShift })}`),
+      api.get<NC>(`/reports/nonconformities${qs({ dateFrom, dateTo, shift: effectiveShift })}`),
+    ])
       .then(([s, n]) => { setSum(s); setNc(n); }).catch((e) => setError(e.message));
-  }, [dateFrom, dateTo, shift]);
+  }, [loading, user, dateFrom, dateTo, shift]);
 
   const cards: [string, number | undefined][] = [
     ['Veículos inspecionados', sum?.total], ['Aprovados', sum?.approved], ['Reprovados', sum?.reproved], ['Checklists incompletos', sum?.inProgress],

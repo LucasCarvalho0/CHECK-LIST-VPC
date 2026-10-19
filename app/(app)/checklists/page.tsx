@@ -7,12 +7,12 @@ import type { Checklist, Paged } from '@/types';
 import { Alert, Btn, Spinner } from '@/components/ui';
 import ChecklistTable from '@/components/ChecklistTable';
 
-import { detectUserShift } from '@/lib/shared/shifts';
+import { detectUserShift, resolveEffectiveShift } from '@/lib/shared/shifts';
 
 const init = { search: '', dateFrom: '', dateTo: '', shift: '', status: '', auditResult: '', inspectorQA: '', leaderVPC: '', order: 'desc' };
 
 export default function ChecklistsPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [f, setF] = useState(init);
   const [applied, setApplied] = useState(init);
   const [page, setPage] = useState(1);
@@ -22,16 +22,18 @@ export default function ChecklistsPage() {
   useEffect(() => {
     if (!user) return;
     const userShift = detectUserShift(user);
-    if (userShift) {
+    if (userShift && !f.shift) {
       setF((prev) => ({ ...prev, shift: userShift }));
       setApplied((prev) => ({ ...prev, shift: userShift }));
     }
-  }, [user]);
+  }, [user, f.shift]);
 
   useEffect(() => {
+    if (loading) return;
     setError(null);
-    api.get<Paged<Checklist>>(`/checklists${qs({ ...applied, page, pageSize: 20 })}`).then(setData).catch((e) => setError(e.message));
-  }, [applied, page]);
+    const effectiveShift = resolveEffectiveShift(user, applied.shift as any);
+    api.get<Paged<Checklist>>(`/checklists${qs({ ...applied, shift: effectiveShift, page, pageSize: 20 })}`).then(setData).catch((e) => setError(e.message));
+  }, [loading, user, applied, page]);
 
   const set = (k: keyof typeof init) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const search = () => { setPage(1); setApplied(f); };
