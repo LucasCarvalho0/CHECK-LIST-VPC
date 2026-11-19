@@ -78,7 +78,7 @@ export const dailyPdfSchema = z.object({
 
 export const loginSchema = z.object({ username: z.string().min(1), password: z.string().min(1) }).strict();
 const roleEnum = z.enum(['ADMIN', 'OPERATOR', 'VIEWER']);
-const pwd = z.string().min(8, 'A senha deve ter no mínimo 8 caracteres.');
+const pwd = z.string().min(6, 'A senha deve ter no mínimo 6 caracteres.');
 export const createUserSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome.'),
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,40}$/, 'Login deve ter 3-40 caracteres (letras minúsculas, números, . _ -).'),

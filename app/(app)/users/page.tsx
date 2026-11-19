@@ -78,8 +78,8 @@ export default function UsersPage() {
         <form onSubmit={create} className="grid gap-3 md:grid-cols-5">
           <Field label="Nome"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
           <Field label="Login"><input required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
-          <Field label="Senha (mín. 8)">
-            <PasswordInput required minLength={8} autoComplete="new-password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+          <Field label="Senha (mín. 6)">
+            <PasswordInput required minLength={6} autoComplete="new-password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
           </Field>
           <Field label="Perfil"><select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>{(Object.keys(roleLabel) as Role[]).map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}</select></Field>
           <div className="flex items-end"><Btn variant="primary" className="w-full">Criar</Btn></div>
@@ -98,7 +98,7 @@ export default function UsersPage() {
                 <td className="px-3 py-2"><Badge tone={u.active ? 'green' : 'red'}>{u.active ? 'Ativo' : 'Inativo'}</Badge></td>
                 <td className="space-x-2 whitespace-nowrap px-3 py-2">
                   <Btn className="!px-2 !py-1 text-xs" disabled={u.id === me?.id} onClick={() => run(() => api.patch(`/users/${u.id}/active`, { active: !u.active }), u.active ? 'Usuário desativado.' : 'Usuário ativado.')}>{u.active ? 'Desativar' : 'Ativar'}</Btn>
-                  <Btn className="!px-2 !py-1 text-xs" onClick={() => { const p = window.prompt('Nova senha (mín. 8 caracteres):'); if (p) void run(() => api.patch(`/users/${u.id}`, { password: p }), 'Senha alterada.'); }}>Redefinir senha</Btn>
+                  <Btn className="!px-2 !py-1 text-xs" onClick={() => { const p = window.prompt('Nova senha (mín. 6 caracteres):'); if (p) void run(() => api.patch(`/users/${u.id}`, { password: p }), 'Senha alterada.'); }}>Redefinir senha</Btn>
                 </td>
               </tr>))}</tbody>
           </table>
