@@ -1,5 +1,6 @@
-const CACHE_NAME = 'sese-qa-v4.5';
+const CACHE_NAME = 'sese-qa-v4.6';
 const OFFLINE_URL = '/offline.html';
+const CANONICAL_HOST = 'nissan-checklist-multimidia.vercel.app';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -64,6 +65,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
+          // Se a Vercel retornou 410 (deployment expirado), redireciona imediatamente para o domínio canônico permanente
+          if (response && response.status === 410) {
+            return Response.redirect('https://' + CANONICAL_HOST + url.pathname + url.search, 302);
+          }
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
@@ -91,8 +96,10 @@ self.addEventListener('fetch', (event) => {
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            return response;
           }
-          return response;
+          // Se deu 410 ou outro erro, tenta o cache
+          return caches.match(request).then((cached) => cached || response);
         })
         .catch(() => caches.match(request))
     );
