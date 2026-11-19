@@ -32,8 +32,8 @@ export async function readBody<T>(req: Request, schema: ZodType<T>): Promise<T> 
   return schema.parse(raw);
 }
 
-export function readQuery<T>(req: Request, schema: ZodType<T>): T {
-  return schema.parse(Object.fromEntries(new URL(req.url).searchParams));
+export function readQuery<T>(req: Request, schema: ZodType<any, any, any>): T {
+  return schema.parse(Object.fromEntries(new URL(req.url).searchParams)) as T;
 }
 
 export const uuid = (v: string) => {

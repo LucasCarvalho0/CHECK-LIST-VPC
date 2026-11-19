@@ -15,7 +15,8 @@ export default function VehicleFields({
   errorFields?: string[]; autoFocusChassis?: boolean; onChassisEnter?: () => void;
 }) {
   const err = (f: string) => (errorFields.includes(f) ? 'Campo obrigatório' : undefined);
-  const text = (k: keyof VehicleValues, label: string) => (
+  type TextKey = 'vehicleVersion' | 'inspectorQA' | 'leaderVPC' | 'bpc';
+  const text = (k: TextKey, label: string) => (
     <Field label={label} required error={err(k)}>
       <input id={`f-${k}`} value={values[k]} disabled={readOnly} onChange={(e) => onChange(k, e.target.value as never)} className={err(k) ? 'border-red-500' : ''} />
     </Field>
