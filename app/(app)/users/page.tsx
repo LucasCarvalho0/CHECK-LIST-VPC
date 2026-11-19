@@ -4,6 +4,7 @@ import { api, ApiError } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import type { Role, User } from '@/types';
 import { Alert, Badge, Btn, Card, Field, Spinner } from '@/components/ui';
+import { PromptDialog } from '@/components/Modal';
 
 const roleLabel: Record<Role, string> = { ADMIN: 'Administrador', OPERATOR: 'Operador', VIEWER: 'Consulta' };
 
@@ -55,6 +56,8 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[] | null>(null);
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; m: string } | null>(null);
   const [form, setForm] = useState({ name: '', username: '', password: '', role: 'OPERATOR' as Role });
+  const [resetUser, setResetUser] = useState<User | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const load = useCallback(() => api.get<User[]>('/users').then(setUsers).catch((e) => setMsg({ t: 'err', m: e.message })), []);
   useEffect(() => { void load(); }, [load]);
@@ -98,12 +101,42 @@ export default function UsersPage() {
                 <td className="px-3 py-2"><Badge tone={u.active ? 'green' : 'red'}>{u.active ? 'Ativo' : 'Inativo'}</Badge></td>
                 <td className="space-x-2 whitespace-nowrap px-3 py-2">
                   <Btn className="!px-2 !py-1 text-xs" disabled={u.id === me?.id} onClick={() => run(() => api.patch(`/users/${u.id}/active`, { active: !u.active }), u.active ? 'Usuário desativado.' : 'Usuário ativado.')}>{u.active ? 'Desativar' : 'Ativar'}</Btn>
-                  <Btn className="!px-2 !py-1 text-xs" onClick={() => { const p = window.prompt('Nova senha (mín. 6 caracteres):'); if (p) void run(() => api.patch(`/users/${u.id}`, { password: p }), 'Senha alterada.'); }}>Redefinir senha</Btn>
+                  <Btn className="!px-2 !py-1 text-xs" onClick={() => setResetUser(u)}>Redefinir senha</Btn>
                 </td>
               </tr>))}</tbody>
           </table>
         </div>
       )}
+
+      {/* Modal elegante para redefinição de senha */}
+      <PromptDialog
+        isOpen={!!resetUser}
+        title="Redefinir Senha"
+        message={`Digite a nova senha para o usuário ${resetUser?.name} (${resetUser?.username}):`}
+        label="Nova Senha"
+        placeholder="Mínimo 6 caracteres"
+        confirmLabel="Salvar Nova Senha"
+        cancelLabel="Cancelar"
+        variant="primary"
+        isPassword={true}
+        minLength={6}
+        required={true}
+        loading={resetLoading}
+        onConfirm={async (newPassword) => {
+          if (!resetUser) return;
+          setResetLoading(true);
+          try {
+            await api.patch(`/users/${resetUser.id}`, { password: newPassword });
+            setMsg({ t: 'ok', m: `Senha de ${resetUser.name} alterada com sucesso.` });
+            setResetUser(null);
+          } catch (e) {
+            setMsg({ t: 'err', m: e instanceof ApiError ? e.message : 'Erro ao alterar senha.' });
+          } finally {
+            setResetLoading(false);
+          }
+        }}
+        onCancel={() => setResetUser(null)}
+      />
     </div>
   );
 }

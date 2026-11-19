@@ -9,6 +9,7 @@ import { ChecklistLike, ResponsesMap, RuleError, validateForFinalize, hasNonConf
 import type { Checklist, Status } from '@/types';
 import { statusLabel } from '@/lib/format';
 import { Alert, Badge, Btn, Card, Field, Spinner } from '@/components/ui';
+import { ConfirmDialog, PromptDialog } from '@/components/Modal';
 import VehicleFields, { VehicleValues } from './VehicleFields';
 import ItemRow from './ItemRow';
 
@@ -76,6 +77,8 @@ export default function ChecklistForm({ id }: { id: string }) {
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const updatedAt = useRef('');
   const pending = useRef<Pending>(empty());
 
@@ -154,31 +157,40 @@ export default function ChecklistForm({ id }: { id: string }) {
     return ok;
   }
 
-  async function finalize() {
+  function finalize() {
     if (!form) return;
     const errs = validateForFinalize(toLike(form), toMap(items));
     setErrors(errs); setShowErrors(true);
     if (errs.length) { setTab(tabOf(errs[0].field)); return flash('err', `Não é possível finalizar: ${errs.length} pendência(s). Veja a lista abaixo.`); }
-    if (!window.confirm('Finalizar o checklist? Depois disso, só um administrador poderá corrigi-lo (com registro de histórico).')) return;
+    setShowFinalizeModal(true);
+  }
+
+  async function handleConfirmFinalize() {
+    setShowFinalizeModal(false);
     setBusy(true);
     try {
       if (!(await flush())) throw new ApiError(0, 'Falha ao salvar antes de finalizar.');
       const c = await api.post<Checklist>(`/checklists/${id}/finalize`);
       setStatus(c.status); updatedAt.current = c.updatedAt;
-      flash('ok', 'Checklist finalizado.');
+      flash('ok', 'Checklist finalizado com sucesso.');
     } catch (e) {
       if (e instanceof ApiError && e.body?.errors) { setErrors(e.body.errors); setShowErrors(true); }
       flash('err', e instanceof ApiError ? e.message : 'Erro ao finalizar.');
     } finally { setBusy(false); }
   }
 
-  async function cancel() {
-    const reason = window.prompt('Motivo do cancelamento (obrigatório):');
-    if (!reason?.trim()) return;
+  function cancel() {
+    setShowCancelModal(true);
+  }
+
+  async function handleConfirmCancel(reason: string) {
+    setShowCancelModal(false);
+    setBusy(true);
     try {
       const c = await api.post<Checklist>(`/checklists/${id}/cancel`, { reason });
       setStatus(c.status); updatedAt.current = c.updatedAt; flash('ok', 'Checklist cancelado.');
     } catch (e) { flash('err', e instanceof ApiError ? e.message : 'Erro ao cancelar.'); }
+    finally { setBusy(false); }
   }
 
   async function openPreview() {
@@ -398,6 +410,36 @@ export default function ChecklistForm({ id }: { id: string }) {
           <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded bg-white shadow-lg" title="Prévia do Checklist" />
         </div>
       )}
+
+      {/* Modal elegante de confirmação para finalizar checklist */}
+      <ConfirmDialog
+        isOpen={showFinalizeModal}
+        title="Finalizar Checklist"
+        message="Deseja realmente finalizar este checklist? Após a finalização, apenas administradores poderão corrigi-lo com registro no histórico de auditoria."
+        confirmLabel="Sim, Finalizar"
+        cancelLabel="Voltar"
+        variant="primary"
+        icon="confirm"
+        loading={busy}
+        onConfirm={handleConfirmFinalize}
+        onCancel={() => setShowFinalizeModal(false)}
+      />
+
+      {/* Modal elegante com input para motivo de cancelamento */}
+      <PromptDialog
+        isOpen={showCancelModal}
+        title="Cancelar Checklist"
+        message="Esta ação irá cancelar o checklist de forma irreversível. Por favor, especifique o motivo:"
+        label="Motivo do cancelamento"
+        placeholder="Ex.: Chassi incorreto, veículo reavaliado em outra linha..."
+        confirmLabel="Cancelar Checklist"
+        cancelLabel="Voltar"
+        variant="danger"
+        required={true}
+        loading={busy}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setShowCancelModal(false)}
+      />
     </div>
   );
 }

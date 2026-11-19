@@ -9,6 +9,7 @@ import { ChecklistLike, ResponsesMap, RuleError, validateForFinalize, hasNonConf
 import type { Checklist, Status } from '@/types';
 import { statusLabel } from '@/lib/format';
 import { Alert, Badge, Btn, Card, Field, Spinner } from '@/components/ui';
+import { ConfirmDialog, PromptDialog } from '@/components/Modal';
 import VehicleFields, { VehicleValues } from './VehicleFields';
 import ItemRow from './ItemRow';
 
@@ -37,7 +38,9 @@ const nz = (v: string | null | undefined) => v ?? '';
 function fromServer(c: Checklist): { form: Form; items: Record<string, ItemState> } {
   const form: Form = {
     chassis: c.chassis, vehicleVersion: nz(c.vehicleVersion), checklistDate: c.checklistDate, checklistTime: c.checklistTime, shift: c.shift ?? '',
-    inspectorQA: nz(c.inspectorQA), leaderVPC: nz(c.leaderVPC), bpc: nz(c.bpc), firmwareVersion: nz(c.firmwareVersion), canbusVersion: nz(c.canbusVersion),
+    inspectorQA: nz(c.inspectorQA), leaderVPC: nz(c.leaderVPC), bpc: nz(c.bpc),
+    isPCD: c.isPCD ?? false, isL1: c.isL1 ?? false, isL2: c.isL2 ?? false, isL3: c.isL3 ?? false,
+    firmwareVersion: nz(c.firmwareVersion), canbusVersion: nz(c.canbusVersion),
     auditResult: c.auditResult ?? '', nonConformityDescription: nz(c.nonConformityDescription), repairStatus: c.repairStatus ?? '',
     repairObservation: nz(c.repairObservation), repairInspectorQA: nz(c.repairInspectorQA), repairLeaderVPC: nz(c.repairLeaderVPC),
     repairDate: nz(c.repairDate), repairTime: nz(c.repairTime),
@@ -74,6 +77,8 @@ export default function ChecklistForm({ id }: { id: string }) {
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const updatedAt = useRef('');
   const pending = useRef<Pending>(empty());
 
@@ -99,7 +104,7 @@ export default function ChecklistForm({ id }: { id: string }) {
     const fields: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(snap.fields)) {
       if (v === '' && ['chassis', 'checklistDate', 'checklistTime'].includes(k)) continue; // obrigatórios: não apaga
-      fields[k] = v === '' ? null : v;
+      fields[k] = (v === '' && typeof v !== 'boolean') ? null : v;
     }
     try {
       const res = await api.patch<Checklist>(`/checklists/${id}`, {
@@ -152,31 +157,40 @@ export default function ChecklistForm({ id }: { id: string }) {
     return ok;
   }
 
-  async function finalize() {
+  function finalize() {
     if (!form) return;
     const errs = validateForFinalize(toLike(form), toMap(items));
     setErrors(errs); setShowErrors(true);
     if (errs.length) { setTab(tabOf(errs[0].field)); return flash('err', `Não é possível finalizar: ${errs.length} pendência(s). Veja a lista abaixo.`); }
-    if (!window.confirm('Finalizar o checklist? Depois disso, só um administrador poderá corrigi-lo (com registro de histórico).')) return;
+    setShowFinalizeModal(true);
+  }
+
+  async function handleConfirmFinalize() {
+    setShowFinalizeModal(false);
     setBusy(true);
     try {
       if (!(await flush())) throw new ApiError(0, 'Falha ao salvar antes de finalizar.');
       const c = await api.post<Checklist>(`/checklists/${id}/finalize`);
       setStatus(c.status); updatedAt.current = c.updatedAt;
-      flash('ok', 'Checklist finalizado.');
+      flash('ok', 'Checklist finalizado com sucesso.');
     } catch (e) {
       if (e instanceof ApiError && e.body?.errors) { setErrors(e.body.errors); setShowErrors(true); }
       flash('err', e instanceof ApiError ? e.message : 'Erro ao finalizar.');
     } finally { setBusy(false); }
   }
 
-  async function cancel() {
-    const reason = window.prompt('Motivo do cancelamento (obrigatório):');
-    if (!reason?.trim()) return;
+  function cancel() {
+    setShowCancelModal(true);
+  }
+
+  async function handleConfirmCancel(reason: string) {
+    setShowCancelModal(false);
+    setBusy(true);
     try {
       const c = await api.post<Checklist>(`/checklists/${id}/cancel`, { reason });
       setStatus(c.status); updatedAt.current = c.updatedAt; flash('ok', 'Checklist cancelado.');
     } catch (e) { flash('err', e instanceof ApiError ? e.message : 'Erro ao cancelar.'); }
+    finally { setBusy(false); }
   }
 
   async function openPreview() {
@@ -210,23 +224,45 @@ export default function ChecklistForm({ id }: { id: string }) {
 
   const itemRows = (key: SectionKey) => {
     const sec = SECTIONS.find((s) => s.key === key)!;
-    const isPcd = (form as Record<string, unknown>).vehicleVersion === 'PCD' || Boolean((form as Record<string, unknown>).isPCD);
+    const isPcd = form.vehicleVersion === 'PCD' || form.isPCD;
+    // NA só aparece para veículos PCD (sem multimídia)
     const sectionAllowNA = sec.allowNA && isPcd;
     return (
       <div className="space-y-2">
-        {sec.items.map((i) => (
-          <ItemRow
-            key={i.code} code={i.code} label={i.label} allowNA={sectionAllowNA}
-            response={items[i.code].response} observation={items[i.code].observation}
-            onResponse={(v) => setItem(i.code, { response: v })} onObservation={(v) => setItem(i.code, { observation: v })}
-            readOnly={readOnly} invalid={errFields.includes(i.code)}
-            extra={i.valueField ? (
-              <Field label={`${i.label} identificada`} required={!isPcd} error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}>
-                <input value={form[i.valueField]} disabled={readOnly || isPcd} onChange={(e) => setField(i.valueField!, e.target.value)} />
-              </Field>
-            ) : undefined}
-          />
-        ))}
+        {sec.items.map((i) => {
+          const isNa = items[i.code]?.response === 'NA';
+          return (
+            <ItemRow
+              key={i.code} code={i.code} label={i.label} allowNA={sectionAllowNA}
+              response={items[i.code]?.response ?? 'OK'} observation={items[i.code]?.observation ?? ''}
+              onResponse={(v) => {
+                setItem(i.code, { response: v });
+                if (v === 'NA' && i.valueField && !form[i.valueField]) {
+                  setField(i.valueField, 'N/A');
+                }
+                if (v !== 'NA' && i.valueField && form[i.valueField] === 'N/A') {
+                  setField(i.valueField, '');
+                }
+              }}
+              onObservation={(v) => setItem(i.code, { observation: v })}
+              readOnly={readOnly} invalid={errFields.includes(i.code)}
+              extra={i.valueField ? (
+                <Field
+                  label={`${i.label} identificada`}
+                  required={!isPcd && !isNa}
+                  error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}
+                >
+                  <input
+                    value={form[i.valueField]}
+                    disabled={readOnly || isNa || isPcd}
+                    placeholder={isPcd ? 'N/A (Não aplicável em PCD)' : ''}
+                    onChange={(e) => setField(i.valueField!, e.target.value)}
+                  />
+                </Field>
+              ) : undefined}
+            />
+          );
+        })}
       </div>
     );
   };
@@ -364,14 +400,46 @@ export default function ChecklistForm({ id }: { id: string }) {
 
       {preview && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-3" role="dialog" aria-label="Pré-visualização de impressão">
-          <div className="mb-2 flex gap-2">
-            <Btn variant="primary" onClick={() => (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print()}>Imprimir</Btn>
-            <Btn onClick={downloadPdf}>Baixar PDF</Btn>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Btn variant="primary" onClick={() => (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print()}>
+              Imprimir / Salvar em PDF
+            </Btn>
+            <span className="text-xs text-white/80 hidden sm:inline">Dica: na tela de impressão, você pode selecionar sua impressora ou escolher "Salvar como PDF".</span>
             <Btn className="ml-auto" onClick={closePreview}>Fechar</Btn>
           </div>
-          <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded bg-white" title="Prévia do PDF" />
+          <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded bg-white shadow-lg" title="Prévia do Checklist" />
         </div>
       )}
+
+      {/* Modal elegante de confirmação para finalizar checklist */}
+      <ConfirmDialog
+        isOpen={showFinalizeModal}
+        title="Finalizar Checklist"
+        message="Deseja realmente finalizar este checklist? Após a finalização, apenas administradores poderão corrigi-lo com registro no histórico de auditoria."
+        confirmLabel="Sim, Finalizar"
+        cancelLabel="Voltar"
+        variant="primary"
+        icon="confirm"
+        loading={busy}
+        onConfirm={handleConfirmFinalize}
+        onCancel={() => setShowFinalizeModal(false)}
+      />
+
+      {/* Modal elegante com input para motivo de cancelamento */}
+      <PromptDialog
+        isOpen={showCancelModal}
+        title="Cancelar Checklist"
+        message="Esta ação irá cancelar o checklist de forma irreversível. Por favor, especifique o motivo:"
+        label="Motivo do cancelamento"
+        placeholder="Ex.: Chassi incorreto, veículo reavaliado em outra linha..."
+        confirmLabel="Cancelar Checklist"
+        cancelLabel="Voltar"
+        variant="danger"
+        required={true}
+        loading={busy}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setShowCancelModal(false)}
+      />
     </div>
   );
 }
