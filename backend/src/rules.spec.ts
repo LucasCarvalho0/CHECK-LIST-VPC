@@ -55,7 +55,7 @@ describe('validação de finalização', () => {
     expect(validateForFinalize(c, allOk()).map((e) => e.field)).toContain('nonConformityDescription');
     expect(validateForFinalize({ ...c, nonConformityDescription: 'Risco no display', repairStatus: 'NOT_APPLICABLE', repairObservation: 'Aguardando peça' }, allOk())).toEqual([]);
   });
-  it('NA é aceito nas seções com allowNA habilitado (visual, funcional, software, adesivo)', () => {
+  it('NA é aceito apenas para veículos PCD em seções com allowNA', () => {
     const r = allOk();
     r['VIS_01'] = { response: 'NA' };
     r['FUN_01'] = { response: 'NA' };
@@ -63,7 +63,12 @@ describe('validação de finalização', () => {
     r['SOF_02'] = { response: 'NA' };
     r['SOF_03'] = { response: 'NA' };
     r['ADE_01'] = { response: 'NA' };
+    // PCD: NA aceito
     expect(validateForFinalize({ ...baseChecklist(), vehicleVersion: 'PCD', firmwareVersion: null, canbusVersion: null }, r)).toEqual([]);
+    // L1: NA NÃO aceito
+    const l1Errors = validateForFinalize({ ...baseChecklist(), vehicleVersion: 'L1' }, r);
+    expect(l1Errors.some((e) => e.field === 'VIS_01')).toBe(true);
+    expect(l1Errors.some((e) => e.field === 'FUN_01')).toBe(true);
   });
   it('item NOK exige decisão explícita sobre o reparo e, se informado, os dados completos', () => {
     const r = allOk();

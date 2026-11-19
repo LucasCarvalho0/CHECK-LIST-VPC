@@ -201,17 +201,19 @@ export default function ChecklistForm({ id }: { id: string }) {
 
   const itemRows = (key: SectionKey) => {
     const sec = SECTIONS.find((s) => s.key === key)!;
+    const isPcd = (form as Record<string, unknown>).vehicleVersion === 'PCD' || Boolean((form as Record<string, unknown>).isPCD);
+    const sectionAllowNA = sec.allowNA && isPcd;
     return (
       <div className="space-y-2">
         {sec.items.map((i) => (
           <ItemRow
-            key={i.code} code={i.code} label={i.label} allowNA={sec.allowNA}
+            key={i.code} code={i.code} label={i.label} allowNA={sectionAllowNA}
             response={items[i.code].response} observation={items[i.code].observation}
             onResponse={(v) => setItem(i.code, { response: v })} onObservation={(v) => setItem(i.code, { observation: v })}
             readOnly={readOnly} invalid={errFields.includes(i.code)}
             extra={i.valueField ? (
-              <Field label={`${i.label} identificada`} required error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}>
-                <input value={form[i.valueField]} disabled={readOnly} onChange={(e) => setField(i.valueField!, e.target.value)} />
+              <Field label={`${i.label} identificada`} required={!isPcd} error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}>
+                <input value={form[i.valueField]} disabled={readOnly || isPcd} onChange={(e) => setField(i.valueField!, e.target.value)} />
               </Field>
             ) : undefined}
           />

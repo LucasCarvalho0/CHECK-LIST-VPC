@@ -13,6 +13,19 @@ const TEXT_FIELDS = [
   'repairObservation', 'repairInspectorQA', 'repairLeaderVPC',
 ] as const;
 
+/** Respostas padrão para veículos PCD (sem multimídia). */
+const PCD_DEFAULTS: Record<string, 'OK' | 'NA'> = {
+  VIS_01: 'OK', VIS_02: 'OK', VIS_03: 'OK', VIS_04: 'OK',
+  VIS_05: 'OK', VIS_06: 'OK', VIS_07: 'OK', VIS_08: 'OK',
+  VIS_09: 'OK', VIS_10: 'OK', VIS_11: 'OK', VIS_12: 'OK',
+  FUN_01: 'NA', FUN_02: 'NA', FUN_03: 'NA',
+  FUN_04: 'OK', FUN_05: 'OK', // ausência de folgas e painel sem avarias: OK
+  FUN_06: 'NA', FUN_07: 'NA', FUN_08: 'NA', FUN_09: 'NA',
+  SOF_01: 'NA', SOF_02: 'NA', SOF_03: 'NA',
+  ADE_01: 'NA', ADE_02: 'NA', ADE_03: 'NA', ADE_04: 'NA',
+  AUD_01: 'OK', AUD_02: 'OK',
+};
+
 // ---------- criação ----------
 export async function createChecklist(dto: CreateChecklistDto, user: AuthUser) {
   const now = nowInTz();
@@ -46,9 +59,16 @@ export async function createChecklist(dto: CreateChecklistDto, user: AuthUser) {
         isL1: dto.isL1 ?? false,
         isL2: dto.isL2 ?? false,
         isL3: dto.isL3 ?? false,
+        firmwareVersion: (dto.isPCD) ? 'N/A' : null,
+        canbusVersion: (dto.isPCD) ? 'N/A' : null,
         createdById: user.id,
         responses: {
-          create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'OK' as const })),
+          create: ALL_ITEMS.map((i) => ({
+            itemCode: i.code,
+            section: i.section,
+            itemLabelSnapshot: i.label,
+            response: (dto.isPCD ? (PCD_DEFAULTS[i.code] ?? 'OK') : 'OK') as 'OK' | 'NOK' | 'NA' | 'UNANSWERED',
+          })),
         },
       },
       include,

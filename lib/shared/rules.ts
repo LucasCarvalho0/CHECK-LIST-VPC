@@ -56,17 +56,16 @@ export function validateForFinalize(c: ChecklistLike, responses: ResponsesMap): 
   req('leaderVPC', c.leaderVPC, 'Informe o Líder VPC.');
   // req('bpc', c.bpc, 'Informe o BPC.'); // Campo BPC removido por solicitação operacional
 
+  const isPcd = c.vehicleVersion === 'PCD' || Boolean((c as Record<string, unknown>).isPCD);
+
   for (const item of ALL_ITEMS) {
     const r = responses[item.code]?.response ?? 'UNANSWERED';
     if (r === 'UNANSWERED') e.push({ field: item.code, message: `Responda o item: ${item.label}` });
-    else if (r === 'NA' && !item.allowNA) e.push({ field: item.code, message: `NA não é permitido no item: ${item.label}` });
+    else if (r === 'NA' && (!item.allowNA || !isPcd)) e.push({ field: item.code, message: `NA não é permitido no item: ${item.label}` });
   }
 
-  const isPcd = c.vehicleVersion === 'PCD' || Boolean((c as Record<string, unknown>).isPCD);
-  if (!isPcd && responses['SOF_02']?.response !== 'NA') {
+  if (!isPcd) {
     req('firmwareVersion', c.firmwareVersion, 'Informe a Versão Firmware identificada.');
-  }
-  if (!isPcd && responses['SOF_03']?.response !== 'NA') {
     req('canbusVersion', c.canbusVersion, 'Informe a Versão Canbus identificada.');
   }
 

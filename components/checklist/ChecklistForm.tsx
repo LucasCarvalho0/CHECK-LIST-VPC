@@ -204,37 +204,23 @@ export default function ChecklistForm({ id }: { id: string }) {
   const itemRows = (key: SectionKey) => {
     const sec = SECTIONS.find((s) => s.key === key)!;
     const isPcd = form.vehicleVersion === 'PCD' || form.isPCD;
+    // NA só aparece para veículos PCD (sem multimídia)
+    const sectionAllowNA = sec.allowNA && isPcd;
     return (
       <div className="space-y-2">
-        {['FUNCTIONAL', 'SOFTWARE', 'VISUAL'].includes(key) && !readOnly && (
-          <div className="flex justify-end pb-1">
-            <button
-              type="button"
-              onClick={() => {
-                sec.items.forEach((item) => setItem(item.code, { response: 'NA' }));
-                if (key === 'SOFTWARE') {
-                  setField('firmwareVersion', 'N/A');
-                  setField('canbusVersion', 'N/A');
-                }
-              }}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded px-2.5 py-1 transition"
-              title="Marca todos os itens desta seção como NA (ex: veículo PCD sem multimídia)"
-            >
-              Marcar seção como NA (PCD)
-            </button>
-          </div>
-        )}
         {sec.items.map((i) => {
           const isNa = items[i.code]?.response === 'NA';
-          const reqSoftware = !isPcd && !isNa;
           return (
             <ItemRow
-              key={i.code} code={i.code} label={i.label} allowNA={sec.allowNA}
+              key={i.code} code={i.code} label={i.label} allowNA={sectionAllowNA}
               response={items[i.code]?.response ?? 'OK'} observation={items[i.code]?.observation ?? ''}
               onResponse={(v) => {
                 setItem(i.code, { response: v });
                 if (v === 'NA' && i.valueField && !form[i.valueField]) {
                   setField(i.valueField, 'N/A');
+                }
+                if (v !== 'NA' && i.valueField && form[i.valueField] === 'N/A') {
+                  setField(i.valueField, '');
                 }
               }}
               onObservation={(v) => setItem(i.code, { observation: v })}
@@ -242,13 +228,13 @@ export default function ChecklistForm({ id }: { id: string }) {
               extra={i.valueField ? (
                 <Field
                   label={`${i.label} identificada`}
-                  required={reqSoftware}
+                  required={!isPcd && !isNa}
                   error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}
                 >
                   <input
                     value={form[i.valueField]}
                     disabled={readOnly || isNa || isPcd}
-                    placeholder={isNa || isPcd ? 'N/A (Não aplicável em PCD)' : ''}
+                    placeholder={isPcd ? 'N/A (Não aplicável em PCD)' : ''}
                     onChange={(e) => setField(i.valueField!, e.target.value)}
                   />
                 </Field>
