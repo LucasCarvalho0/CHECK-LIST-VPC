@@ -22,6 +22,8 @@ export const createChecklistSchema = z.object({
   bpc: z.string().optional(),
   isPCD: z.boolean().optional(),
   isL1: z.boolean().optional(),
+  isL2: z.boolean().optional(),
+  isL3: z.boolean().optional(),
   /** confirma conscientemente uma nova inspeção com mesmo chassi e data */
   confirmDuplicate: z.boolean().optional(),
 }).strict();
@@ -32,6 +34,8 @@ export const updateChecklistSchema = z.object({
   nonConformityDescription: txt, repairObservation: txt, repairInspectorQA: txt, repairLeaderVPC: txt,
   isPCD: z.boolean().nullable().optional(),
   isL1: z.boolean().nullable().optional(),
+  isL2: z.boolean().nullable().optional(),
+  isL3: z.boolean().nullable().optional(),
   chassis: normChassis.optional(),
   checklistDate: date.optional(),
   checklistTime: time.optional(),

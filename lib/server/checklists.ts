@@ -42,6 +42,10 @@ export async function createChecklist(dto: CreateChecklistDto, user: AuthUser) {
         inspectorQA: emptyToNull(dto.inspectorQA) ?? null,
         leaderVPC: emptyToNull(dto.leaderVPC) ?? null,
         bpc: emptyToNull(dto.bpc) ?? null,
+        isPCD: dto.isPCD ?? false,
+        isL1: dto.isL1 ?? false,
+        isL2: dto.isL2 ?? false,
+        isL3: dto.isL3 ?? false,
         createdById: user.id,
         responses: {
           create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'UNANSWERED' as const })),
@@ -125,6 +129,8 @@ export async function updateChecklist(id: string, dto: UpdateChecklistDto, user:
   for (const f of TEXT_FIELDS) if (dto[f] !== undefined) (data as any)[f] = emptyToNull(dto[f]);
   if (dto.isPCD !== undefined) (data as any).isPCD = dto.isPCD ?? false;
   if (dto.isL1 !== undefined) (data as any).isL1 = dto.isL1 ?? false;
+  if (dto.isL2 !== undefined) (data as any).isL2 = dto.isL2 ?? false;
+  if (dto.isL3 !== undefined) (data as any).isL3 = dto.isL3 ?? false;
   if (dto.chassis !== undefined) {
     if (!dto.chassis) throw new HttpError(400, 'O chassi não pode ficar vazio.');
     data.chassis = dto.chassis;

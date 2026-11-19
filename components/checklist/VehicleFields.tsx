@@ -5,7 +5,7 @@ import type { Shift } from '@/types';
 
 export interface VehicleValues {
   chassis: string; vehicleVersion: string; checklistDate: string; checklistTime: string; shift: Shift | '';
-  inspectorQA: string; leaderVPC: string; bpc: string; isPCD: boolean; isL1: boolean;
+  inspectorQA: string; leaderVPC: string; bpc: string; isPCD: boolean; isL1: boolean; isL2: boolean; isL3: boolean;
 }
 
 export default function VehicleFields({
@@ -51,17 +51,27 @@ export default function VehicleFields({
       {text('bpc', 'BPC')}
       <div className="text-sm md:col-span-2">
         <span className="mb-1 block font-medium text-slate-700">Tipo de Veículo</span>
-        <div className="flex gap-6 rounded border border-slate-300 p-2">
+        <div className="flex flex-wrap gap-4 md:gap-6 rounded border border-slate-300 p-2.5 bg-slate-50/50">
           <label className="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" className="!w-4 h-4" checked={values.isPCD} disabled={readOnly}
+            <input type="checkbox" className="!w-4 h-4 text-blue-600 rounded" checked={values.isPCD} disabled={readOnly}
               onChange={(e) => onChange('isPCD', e.target.checked as never)} />
-            <span className="font-semibold">PCD</span>
+            <span className="font-semibold text-slate-800">PCD</span>
             <span className="text-xs text-slate-500">(Pessoa com Deficiência)</span>
           </label>
           <label className="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" className="!w-4 h-4" checked={values.isL1} disabled={readOnly}
+            <input type="checkbox" className="!w-4 h-4 text-purple-600 rounded" checked={values.isL1} disabled={readOnly}
               onChange={(e) => onChange('isL1', e.target.checked as never)} />
-            <span className="font-semibold">L1</span>
+            <span className="font-semibold text-slate-800">L1</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" className="!w-4 h-4 text-indigo-600 rounded" checked={values.isL2} disabled={readOnly}
+              onChange={(e) => onChange('isL2', e.target.checked as never)} />
+            <span className="font-semibold text-slate-800">L2</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" className="!w-4 h-4 text-emerald-600 rounded" checked={values.isL3} disabled={readOnly}
+              onChange={(e) => onChange('isL3', e.target.checked as never)} />
+            <span className="font-semibold text-slate-800">L3</span>
           </label>
         </div>
       </div>

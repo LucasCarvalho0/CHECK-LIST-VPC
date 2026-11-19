@@ -78,6 +78,8 @@ model Checklist {
   bpc                      String?
   isPCD                    Boolean  @default(false)
   isL1                     Boolean  @default(false)
+  isL2                     Boolean  @default(false)
+  isL3                     Boolean  @default(false)
   firmwareVersion          String?
   canbusVersion            String?
   auditResult              AuditResult?

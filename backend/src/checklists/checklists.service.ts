@@ -14,7 +14,7 @@ const TEXT_FIELDS = [
   'vehicleVersion', 'inspectorQA', 'leaderVPC', 'bpc', 'firmwareVersion', 'canbusVersion', 'nonConformityDescription',
   'repairObservation', 'repairInspectorQA', 'repairLeaderVPC',
 ] as const;
-const BOOL_FIELDS = ['isPCD', 'isL1'] as const;
+const BOOL_FIELDS = ['isPCD', 'isL1', 'isL2', 'isL3'] as const;
 
 @Injectable()
 export class ChecklistsService {

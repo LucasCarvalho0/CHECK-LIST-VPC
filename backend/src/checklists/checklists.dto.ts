@@ -28,6 +28,8 @@ export class CreateChecklistDto {
   @IsOptional() @IsString() bpc?: string;
   @IsOptional() @IsBoolean() isPCD?: boolean;
   @IsOptional() @IsBoolean() isL1?: boolean;
+  @IsOptional() @IsBoolean() isL2?: boolean;
+  @IsOptional() @IsBoolean() isL3?: boolean;
   /** Confirma conscientemente uma nova inspeção com mesmo chassi e data */
   @IsOptional() @IsBoolean() confirmDuplicate?: boolean;
 }
@@ -50,6 +52,8 @@ export class UpdateChecklistDto {
   @IsOptional() @IsString() bpc?: string | null;
   @IsOptional() @IsBoolean() isPCD?: boolean | null;
   @IsOptional() @IsBoolean() isL1?: boolean | null;
+  @IsOptional() @IsBoolean() isL2?: boolean | null;
+  @IsOptional() @IsBoolean() isL3?: boolean | null;
   @IsOptional() @IsString() firmwareVersion?: string | null;
   @IsOptional() @IsString() canbusVersion?: string | null;
   @IsOptional() @IsEnum(AuditResultDto) auditResult?: AuditResultDto | null;

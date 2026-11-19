@@ -10,7 +10,7 @@ export interface ItemResponse { itemCode: string; section: string; itemLabelSnap
 
 export interface Checklist {
   id: string; chassis: string; vehicleVersion: string | null; checklistDate: string; checklistTime: string; shift: Shift | null;
-  inspectorQA: string | null; leaderVPC: string | null; bpc: string | null; isPCD: boolean; isL1: boolean;
+  inspectorQA: string | null; leaderVPC: string | null; bpc: string | null; isPCD: boolean; isL1: boolean; isL2: boolean; isL3: boolean;
   firmwareVersion: string | null; canbusVersion: string | null;
   auditResult: AuditResult | null; nonConformityDescription: string | null; repairStatus: RepairStatus | null; repairObservation: string | null;
   repairInspectorQA: string | null; repairLeaderVPC: string | null; repairDate: string | null; repairTime: string | null;

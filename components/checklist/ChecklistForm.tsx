@@ -37,7 +37,8 @@ const nz = (v: string | null | undefined) => v ?? '';
 function fromServer(c: Checklist): { form: Form; items: Record<string, ItemState> } {
   const form: Form = {
     chassis: c.chassis, vehicleVersion: nz(c.vehicleVersion), checklistDate: c.checklistDate, checklistTime: c.checklistTime, shift: c.shift ?? '',
-    inspectorQA: nz(c.inspectorQA), leaderVPC: nz(c.leaderVPC), bpc: nz(c.bpc), isPCD: c.isPCD ?? false, isL1: c.isL1 ?? false,
+    inspectorQA: nz(c.inspectorQA), leaderVPC: nz(c.leaderVPC), bpc: nz(c.bpc),
+    isPCD: c.isPCD ?? false, isL1: c.isL1 ?? false, isL2: c.isL2 ?? false, isL3: c.isL3 ?? false,
     firmwareVersion: nz(c.firmwareVersion), canbusVersion: nz(c.canbusVersion),
     auditResult: c.auditResult ?? '', nonConformityDescription: nz(c.nonConformityDescription), repairStatus: c.repairStatus ?? '',
     repairObservation: nz(c.repairObservation), repairInspectorQA: nz(c.repairInspectorQA), repairLeaderVPC: nz(c.repairLeaderVPC),

@@ -26,7 +26,13 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
               <td className="px-3 py-2">{brDate(c.checklistDate)}</td>
               <td className="px-3 py-2">{c.checklistTime}</td>
               <td className="px-3 py-2">{shiftLabel(c.shift)}</td>
-              <td className="px-3 py-2 font-mono">{c.chassis}{c.isPCD && <span className="ml-1 rounded bg-blue-100 px-1 text-xs font-bold text-blue-800">PCD</span>}{c.isL1 && <span className="ml-1 rounded bg-purple-100 px-1 text-xs font-bold text-purple-800">L1</span>}</td>
+              <td className="px-3 py-2 font-mono">
+                {c.chassis}
+                {c.isPCD && <span className="ml-1 rounded bg-blue-100 px-1 text-xs font-bold text-blue-800">PCD</span>}
+                {c.isL1 && <span className="ml-1 rounded bg-purple-100 px-1 text-xs font-bold text-purple-800">L1</span>}
+                {c.isL2 && <span className="ml-1 rounded bg-indigo-100 px-1 text-xs font-bold text-indigo-800">L2</span>}
+                {c.isL3 && <span className="ml-1 rounded bg-emerald-100 px-1 text-xs font-bold text-emerald-800">L3</span>}
+              </td>
               <td className="px-3 py-2">{c.vehicleVersion}</td>
               <td className="px-3 py-2">{c.inspectorQA}</td>
               <td className="px-3 py-2">{c.leaderVPC}</td>
