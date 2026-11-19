@@ -40,6 +40,7 @@ export default function VehicleFields({
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
+      {/* 1. Chassi */}
       <Field label="Chassi" required error={err('chassis')}>
         <ChassisInput
           value={values.chassis}
@@ -55,15 +56,13 @@ export default function VehicleFields({
         />
       </Field>
 
-      {/* Versão do Veículo: seleção exclusiva de apenas um (PCD, L1, L2, L3) */}
+      {/* 2. Versão do Veículo: seleção exclusiva com botões compactos e alinhados */}
       <div className="text-sm">
         <span className="mb-1 block font-medium text-slate-700">
           Versão do Veículo <span className="text-red-600">*</span>
         </span>
         <div
-          className={`grid grid-cols-2 sm:grid-cols-4 gap-2 rounded border p-2 bg-slate-50/50 ${
-            err('vehicleVersion') ? 'border-red-500' : 'border-slate-300'
-          }`}
+          className="grid grid-cols-4 gap-2"
           role="radiogroup"
           aria-label="Versão do Veículo"
         >
@@ -81,14 +80,16 @@ export default function VehicleFields({
                 aria-checked={isSelected}
                 disabled={readOnly}
                 onClick={() => selectVersion(ver.key as any)}
-                className={`flex flex-col items-center justify-center p-2 rounded border text-sm font-bold transition ${
+                className={`flex h-[36px] items-center justify-center rounded border px-2 text-sm font-semibold transition ${
                   isSelected
-                    ? 'bg-nissan text-white border-nissan shadow-sm'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                    ? 'bg-nissan text-white border-nissan shadow-sm ring-1 ring-nissan'
+                    : err('vehicleVersion')
+                    ? 'bg-white text-slate-700 border-red-300 hover:bg-slate-100 hover:border-red-400'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:border-slate-400'
                 }`}
+                title={ver.sub ? `${ver.label} (${ver.sub})` : ver.label}
               >
                 <span>{ver.label}</span>
-                {ver.sub && <span className="text-[10px] opacity-80 font-normal">{ver.sub}</span>}
               </button>
             );
           })}
@@ -152,7 +153,7 @@ export default function VehicleFields({
       </Field>
 
       {/* Líder VPC */}
-      <Field label="Líder VPC" required error={err('leaderVPC')}>
+      <Field label="Líder VPC" required error={err('leaderVPC')} className="md:col-span-2">
         <input
           id="f-leaderVPC"
           value={values.leaderVPC}

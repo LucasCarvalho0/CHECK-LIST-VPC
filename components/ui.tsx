@@ -19,9 +19,9 @@ export function Btn({ variant = 'secondary', className = '', ...p }: ButtonHTMLA
   );
 }
 
-export function Field({ label, required, children, hint, error }: { label: string; required?: boolean; children: ReactNode; hint?: string; error?: string }) {
+export function Field({ label, required, children, hint, error, className = '' }: { label: string; required?: boolean; children: ReactNode; hint?: string; error?: string; className?: string }) {
   return (
-    <label className="block text-sm">
+    <label className={`block text-sm ${className}`}>
       <span className="mb-1 block font-medium text-slate-700">
         {label} {required && <span className="text-red-600" title="Obrigatório para finalizar">*</span>}
       </span>
