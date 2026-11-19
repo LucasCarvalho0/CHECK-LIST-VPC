@@ -3,19 +3,16 @@ import { prisma } from './prisma';
 import { planPages } from './page-plan';
 import { ITEM_INDEX } from '@/lib/shared/catalog';
 import { toDateOnly } from './mapper';
-import { buildShiftClause, ShiftFilter } from './shifts';
 
-type Filter = ShiftFilter;
+type Filter = { date?: string; dateFrom?: string; dateTo?: string; shift?: 'FIRST' | 'SECOND' };
 
 function baseWhere(q: Filter): Prisma.ChecklistWhereInput {
   const where: Prisma.ChecklistWhereInput = { deletedAt: null, status: { not: 'CANCELED' } };
-  const shiftClause = buildShiftClause(q);
-  return {
-    AND: [
-      where,
-      shiftClause,
-    ],
-  };
+  if (q.date) where.checklistDate = toDateOnly(q.date);
+  else if (q.dateFrom || q.dateTo)
+    where.checklistDate = { ...(q.dateFrom && { gte: toDateOnly(q.dateFrom) }), ...(q.dateTo && { lte: toDateOnly(q.dateTo) }) };
+  if (q.shift) where.shift = q.shift;
+  return where;
 }
 
 /**

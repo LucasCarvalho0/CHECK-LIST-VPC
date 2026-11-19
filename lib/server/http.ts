@@ -26,13 +26,13 @@ export function handle<C = any>(fn: Handler<C>) {
   };
 }
 
-export async function readBody<T>(req: Request, schema: ZodType<T, any, any>): Promise<T> {
+export async function readBody<T>(req: Request, schema: ZodType<T>): Promise<T> {
   let raw: unknown;
   try { raw = await req.json(); } catch { throw new HttpError(400, 'Corpo da requisição inválido (JSON esperado).'); }
   return schema.parse(raw);
 }
 
-export function readQuery<T>(req: Request, schema: ZodType<T, any, any>): T {
+export function readQuery<T>(req: Request, schema: ZodType<T>): T {
   return schema.parse(Object.fromEntries(new URL(req.url).searchParams));
 }
 

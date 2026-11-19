@@ -24,15 +24,11 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
-        <div className="flex justify-center mb-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/grupo-sese.png" alt="SESÉ QA" className="h-14 w-auto object-contain" />
-        </div>
-        <h1 className="mb-1 text-lg font-bold text-center">Checklist Multimídia – SESÉ QA</h1>
-        <p className="mb-4 text-sm text-slate-500 text-center">Acesso restrito · Controle de Qualidade</p>
-        <form onSubmit={submit} method="POST" action="#" className="space-y-3">
-          <Field label="Usuário"><input id="username" name="username" autoFocus autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} /></Field>
-          <Field label="Senha"><input id="password" name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+        <h1 className="mb-1 text-lg font-bold">Checklist de Instalação Multimídia Nissan</h1>
+        <p className="mb-4 text-sm text-slate-500">Acesso restrito a usuários internos.</p>
+        <form onSubmit={submit} className="space-y-3">
+          <Field label="Usuário"><input autoFocus autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} /></Field>
+          <Field label="Senha"><input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
           {error && <Alert type="err">{error}</Alert>}
           <Btn variant="primary" className="w-full" disabled={busy || !username || !password}>{busy ? 'Entrando...' : 'Entrar'}</Btn>
         </form>

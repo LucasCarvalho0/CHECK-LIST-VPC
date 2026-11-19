@@ -54,6 +54,7 @@ export function validateForFinalize(c: ChecklistLike, responses: ResponsesMap): 
   if (!c.shift) e.push({ field: 'shift', message: 'Selecione o turno.' });
   req('inspectorQA', c.inspectorQA, 'Informe o Inspetor QA.');
   req('leaderVPC', c.leaderVPC, 'Informe o Líder VPC.');
+  req('bpc', c.bpc, 'Informe o BPC.');
 
   for (const item of ALL_ITEMS) {
     const r = responses[item.code]?.response ?? 'UNANSWERED';

@@ -6,7 +6,6 @@ import { ALL_ITEMS, ITEM_INDEX, normalizeChassis } from '@/lib/shared/catalog';
 import { validateForFinalize } from '@/lib/shared/rules';
 import type { CreateChecklistDto, ListChecklistsDto, UpdateChecklistDto } from './schemas';
 import { emptyToNull, fromDate, nowInTz, serializeChecklist, toDateOnly, toRuleInput } from './mapper';
-import { buildShiftClause } from './shifts';
 
 const include = { responses: true } as const;
 const TEXT_FIELDS = [
@@ -44,9 +43,8 @@ export async function createChecklist(dto: CreateChecklistDto, user: AuthUser) {
         leaderVPC: emptyToNull(dto.leaderVPC) ?? null,
         bpc: emptyToNull(dto.bpc) ?? null,
         createdById: user.id,
-        auditResult: 'APPROVED',
         responses: {
-          create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'OK' as const })),
+          create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'UNANSWERED' as const })),
         },
       },
       include,
@@ -67,26 +65,17 @@ export async function getChecklist(id: string) {
 export function buildWhere(q: Partial<ListChecklistsDto>): Prisma.ChecklistWhereInput {
   const where: Prisma.ChecklistWhereInput = { deletedAt: null };
   if (q.search) where.chassis = { contains: q.search, mode: 'insensitive' };
+  if (q.date) where.checklistDate = toDateOnly(q.date);
+  else if (q.dateFrom || q.dateTo) {
+    where.checklistDate = { ...(q.dateFrom && { gte: toDateOnly(q.dateFrom) }), ...(q.dateTo && { lte: toDateOnly(q.dateTo) }) };
+  }
+  if (q.shift) where.shift = q.shift;
   if (q.status) where.status = q.status;
   if (q.auditResult) where.auditResult = q.auditResult;
   if (q.inspectorQA) where.inspectorQA = { contains: q.inspectorQA, mode: 'insensitive' };
   if (q.leaderVPC) where.leaderVPC = { contains: q.leaderVPC, mode: 'insensitive' };
   if (q.bpc) where.bpc = { contains: q.bpc, mode: 'insensitive' };
-
-  const shiftClause = buildShiftClause({
-    date: q.date,
-    dateFrom: q.dateFrom,
-    dateTo: q.dateTo,
-    shift: q.shift,
-    shiftOvernight: q.shiftOvernight,
-  });
-
-  return {
-    AND: [
-      where,
-      shiftClause,
-    ],
-  };
+  return where;
 }
 
 export async function listChecklists(q: ListChecklistsDto) {
@@ -134,6 +123,8 @@ export async function updateChecklist(id: string, dto: UpdateChecklistDto, user:
 
   const data: Prisma.ChecklistUpdateManyMutationInput = {};
   for (const f of TEXT_FIELDS) if (dto[f] !== undefined) (data as any)[f] = emptyToNull(dto[f]);
+  if (dto.isPCD !== undefined) (data as any).isPCD = dto.isPCD ?? false;
+  if (dto.isL1 !== undefined) (data as any).isL1 = dto.isL1 ?? false;
   if (dto.chassis !== undefined) {
     if (!dto.chassis) throw new HttpError(400, 'O chassi não pode ficar vazio.');
     data.chassis = dto.chassis;

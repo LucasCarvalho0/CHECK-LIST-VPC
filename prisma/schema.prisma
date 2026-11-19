@@ -55,7 +55,6 @@ model User {
   username     String   @unique
   passwordHash String
   role         Role     @default(OPERATOR)
-  shift        Shift?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -77,6 +76,8 @@ model Checklist {
   inspectorQA              String?
   leaderVPC                String?
   bpc                      String?
+  isPCD                    Boolean  @default(false)
+  isL1                     Boolean  @default(false)
   firmwareVersion          String?
   canbusVersion            String?
   auditResult              AuditResult?

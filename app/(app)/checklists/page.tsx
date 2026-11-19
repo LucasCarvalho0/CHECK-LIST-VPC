@@ -7,12 +7,10 @@ import type { Checklist, Paged } from '@/types';
 import { Alert, Btn, Spinner } from '@/components/ui';
 import ChecklistTable from '@/components/ChecklistTable';
 
-import { detectUserShift, resolveEffectiveShift } from '@/lib/shared/shifts';
-
-const init = { search: '', dateFrom: '', dateTo: '', shift: '', status: '', auditResult: '', inspectorQA: '', leaderVPC: '', order: 'desc' };
+const init = { search: '', dateFrom: '', dateTo: '', shift: '', status: '', auditResult: '', inspectorQA: '', leaderVPC: '', bpc: '', order: 'desc' };
 
 export default function ChecklistsPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [f, setF] = useState(init);
   const [applied, setApplied] = useState(init);
   const [page, setPage] = useState(1);
@@ -20,26 +18,12 @@ export default function ChecklistsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    const userShift = detectUserShift(user);
-    if (userShift && !f.shift) {
-      setF((prev) => ({ ...prev, shift: userShift }));
-      setApplied((prev) => ({ ...prev, shift: userShift }));
-    }
-  }, [user, f.shift]);
-
-  useEffect(() => {
-    if (loading) return;
     setError(null);
-    const effectiveShift = resolveEffectiveShift(user, applied.shift as any);
-    api.get<Paged<Checklist>>(`/checklists${qs({ ...applied, shift: effectiveShift, page, pageSize: 20 })}`).then(setData).catch((e) => setError(e.message));
-  }, [loading, user, applied, page]);
+    api.get<Paged<Checklist>>(`/checklists${qs({ ...applied, page, pageSize: 20 })}`).then(setData).catch((e) => setError(e.message));
+  }, [applied, page]);
 
   const set = (k: keyof typeof init) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const search = () => { setPage(1); setApplied(f); };
-
-  const userShift = detectUserShift(user);
-  const isOperator = user?.role === 'OPERATOR';
 
   return (
     <div className="p-4 md:p-6">
@@ -51,28 +35,14 @@ export default function ChecklistsPage() {
         <label className="text-xs">Chassi<input value={f.search} onChange={set('search')} placeholder="Buscar chassi" /></label>
         <label className="text-xs">De<input type="date" value={f.dateFrom} onChange={set('dateFrom')} /></label>
         <label className="text-xs">Até<input type="date" value={f.dateTo} onChange={set('dateTo')} /></label>
-        <label className="text-xs">
-          Turno {isOperator && <span className="text-[10px] text-blue-600">(Fixo)</span>}
-          <select value={f.shift} disabled={isOperator && !!userShift} onChange={set('shift')}>
-            {!isOperator && <option value="">Todos</option>}
-            <option value="FIRST">1º Turno</option>
-            <option value="SECOND">2º Turno</option>
-          </select>
-        </label>
+        <label className="text-xs">Turno<select value={f.shift} onChange={set('shift')}><option value="">Todos</option><option value="FIRST">1º Turno</option><option value="SECOND">2º Turno</option></select></label>
         <label className="text-xs">Situação<select value={f.status} onChange={set('status')}><option value="">Todas</option><option value="IN_PROGRESS">Em preenchimento</option><option value="FINALIZED">Finalizado</option><option value="CANCELED">Cancelado</option></select></label>
         <label className="text-xs">Resultado<select value={f.auditResult} onChange={set('auditResult')}><option value="">Todos</option><option value="APPROVED">Aprovado</option><option value="REPROVED">Reprovado</option></select></label>
         <label className="text-xs">Inspetor QA<input value={f.inspectorQA} onChange={set('inspectorQA')} /></label>
         <label className="text-xs">Líder VPC<input value={f.leaderVPC} onChange={set('leaderVPC')} /></label>
+        <label className="text-xs">BPC<input value={f.bpc} onChange={set('bpc')} /></label>
         <label className="text-xs">Ordenar<select value={f.order} onChange={set('order')}><option value="desc">Mais recentes</option><option value="asc">Mais antigos</option></select></label>
-        <div className="flex items-end gap-2">
-          <Btn variant="dark" onClick={search}>Filtrar</Btn>
-          <Btn onClick={() => {
-            const resetVal = userShift && isOperator ? { ...init, shift: userShift } : init;
-            setF(resetVal);
-            setApplied(resetVal);
-            setPage(1);
-          }}>Limpar</Btn>
-        </div>
+        <div className="flex items-end gap-2"><Btn variant="dark" onClick={search}>Filtrar</Btn><Btn onClick={() => { setF(init); setApplied(init); setPage(1); }}>Limpar</Btn></div>
       </div>
       {error && <Alert type="err">{error}</Alert>}
       {!data && !error ? <Spinner /> : data && (

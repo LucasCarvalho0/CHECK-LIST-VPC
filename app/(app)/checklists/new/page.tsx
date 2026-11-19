@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiError } from '@/services/api';
@@ -8,33 +8,18 @@ import { nowLocalTime, todayLocal, statusLabel, shiftLabel } from '@/lib/format'
 import { Alert, Btn, Card } from '@/components/ui';
 import VehicleFields, { VehicleValues } from '@/components/checklist/VehicleFields';
 
-import { detectUserShift, detectDefaultInspector, SHIFT_CONFIGS } from '@/lib/shared/shifts';
-
 interface Existing { id: string; status: import('@/types').Status; checklistTime: string; shift: 'FIRST' | 'SECOND' | null }
 
 export default function NewChecklist() {
   const router = useRouter();
   const { user } = useAuth();
   const [v, setV] = useState<VehicleValues>({
-    chassis: '', vehicleVersion: '', checklistDate: todayLocal(), checklistTime: nowLocalTime(), shift: '', inspectorQA: '', leaderVPC: '',
+    chassis: '', vehicleVersion: '', checklistDate: todayLocal(), checklistTime: nowLocalTime(), shift: '', inspectorQA: '', leaderVPC: '', bpc: '',
+    isPCD: false, isL1: false,
   });
   const [error, setError] = useState<string | null>(null);
   const [dups, setDups] = useState<Existing[] | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const detectedShift = detectUserShift(user);
-    const defaultInspector = detectDefaultInspector(user);
-    const defaultLeader = detectedShift ? SHIFT_CONFIGS[detectedShift].leaderVPC : '';
-
-    setV((prev) => ({
-      ...prev,
-      shift: prev.shift || detectedShift || '',
-      leaderVPC: prev.leaderVPC || defaultLeader || '',
-      inspectorQA: prev.inspectorQA || defaultInspector,
-    }));
-  }, [user]);
 
   if (user?.role === 'VIEWER') return <div className="p-6"><Alert type="err">Seu perfil é somente consulta.</Alert></div>;
 

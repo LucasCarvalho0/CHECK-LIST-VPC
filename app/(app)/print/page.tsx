@@ -4,16 +4,12 @@ import { api, ApiError, downloadBlob, qs } from '@/services/api';
 import { brDate, resultLabel, shiftLabel, statusLabel, todayLocal } from '@/lib/format';
 import { Alert, Btn, Card, Spinner } from '@/components/ui';
 
-import { useAuth } from '@/hooks/useAuth';
-import { detectUserShift, resolveEffectiveShift } from '@/lib/shared/shifts';
-
 interface Daily {
   date: string; vehicles: { id: string; chassis: string; time: string; shift: 'FIRST' | 'SECOND' | null; status: import('@/types').Status; auditResult: 'APPROVED' | 'REPROVED' | null }[];
   pages: { vehicles: number; contentPages: number; blankPages: number; totalPages: number; sheetsDuplex: number };
 }
 
 export default function PrintDayPage() {
-  const { user, loading } = useAuth();
   const [date, setDate] = useState(todayLocal());
   const [shift, setShift] = useState('');
   const [blank, setBlank] = useState(false);
@@ -25,17 +21,9 @@ export default function PrintDayPage() {
   const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    const userShift = detectUserShift(user);
-    if (userShift && !shift) setShift(userShift);
-  }, [user, shift]);
-
-  useEffect(() => {
-    if (loading) return;
     setData(null); setError(null); setExcluded(new Set());
-    const effectiveShift = resolveEffectiveShift(user, shift as any);
-    api.get<Daily>(`/reports/daily${qs({ date, shift: effectiveShift, blankSeparator: blank, includeInProgress: !onlyFinal })}`).then(setData).catch((e) => setError(e.message));
-  }, [loading, user, date, shift, blank, onlyFinal]);
+    api.get<Daily>(`/reports/daily${qs({ date, shift, blankSeparator: blank, includeInProgress: !onlyFinal })}`).then(setData).catch((e) => setError(e.message));
+  }, [date, shift, blank, onlyFinal]);
 
   const selected = data?.vehicles.filter((v) => !excluded.has(v.id)) ?? [];
   const content = selected.length * 3;
@@ -46,16 +34,8 @@ export default function PrintDayPage() {
     setBusy(true); setError(null);
     try {
       const blob = await api.blob(`/reports/daily/pdf${mode === 'download' ? '?download=1' : ''}`, { method: 'POST', body: body() });
-      if (mode === 'download') {
-        if (blob.type.includes('html')) {
-          const url = URL.createObjectURL(blob);
-          window.open(url, '_blank');
-        } else {
-          downloadBlob(blob, `checklists-${date}${shift ? (shift === 'FIRST' ? '-1turno' : '-2turno') : ''}${blank ? '-duplex' : ''}.pdf`);
-        }
-      } else {
-        setPreview(URL.createObjectURL(blob));
-      }
+      if (mode === 'download') downloadBlob(blob, `checklists-${date}${shift ? (shift === 'FIRST' ? '-1turno' : '-2turno') : ''}${blank ? '-duplex' : ''}.pdf`);
+      else setPreview(URL.createObjectURL(blob));
     } catch (e) { setError(e instanceof ApiError ? e.message : 'Erro ao gerar o PDF.'); } finally { setBusy(false); }
   }
   const toggle = (id: string) => setExcluded((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });

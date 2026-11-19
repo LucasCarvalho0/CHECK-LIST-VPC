@@ -96,5 +96,3 @@ Erros seguem o formato `{ statusCode, message, errors? }`. Erros de validação 
 - A geração de PDF exige servidor Node com Chromium (não funciona em hospedagem serverless sem esse navegador).
 - `firmwareUpdatedStatus` do prompt é representado pelo item `SOF_01` (OK/NOK).
 - Exclusão lógica existe no schema (`deletedAt`), mas a interface oferece *cancelar*. O histórico de auditoria é consultável só pela API.
-
-# CHECK-LIST-VPC

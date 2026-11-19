@@ -20,6 +20,8 @@ export const createChecklistSchema = z.object({
   inspectorQA: z.string().optional(),
   leaderVPC: z.string().optional(),
   bpc: z.string().optional(),
+  isPCD: z.boolean().optional(),
+  isL1: z.boolean().optional(),
   /** confirma conscientemente uma nova inspeção com mesmo chassi e data */
   confirmDuplicate: z.boolean().optional(),
 }).strict();
@@ -28,6 +30,8 @@ export const createChecklistSchema = z.object({
 export const updateChecklistSchema = z.object({
   vehicleVersion: txt, inspectorQA: txt, leaderVPC: txt, bpc: txt, firmwareVersion: txt, canbusVersion: txt,
   nonConformityDescription: txt, repairObservation: txt, repairInspectorQA: txt, repairLeaderVPC: txt,
+  isPCD: z.boolean().nullable().optional(),
+  isL1: z.boolean().nullable().optional(),
   chassis: normChassis.optional(),
   checklistDate: date.optional(),
   checklistTime: time.optional(),
@@ -52,23 +56,15 @@ export const listChecklistsSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(200).default(20),
   search: z.string().transform(normalizeChassis).optional(),
   date: date.optional(), dateFrom: date.optional(), dateTo: date.optional(),
-  shift: shiftEnum.optional(), shiftOvernight: z.coerce.boolean().optional(),
-  status: statusEnum.optional(), auditResult: resultEnum.optional(),
+  shift: shiftEnum.optional(), status: statusEnum.optional(), auditResult: resultEnum.optional(),
   inspectorQA: z.string().optional(), leaderVPC: z.string().optional(), bpc: z.string().optional(),
   order: z.enum(['asc', 'desc']).default('desc'),
 });
 
-export const summaryQuerySchema = z.object({
-  date: date.optional(),
-  dateFrom: date.optional(),
-  dateTo: date.optional(),
-  shift: shiftEnum.optional(),
-  shiftOvernight: z.coerce.boolean().optional(),
-});
+export const summaryQuerySchema = z.object({ date: date.optional(), dateFrom: date.optional(), dateTo: date.optional(), shift: shiftEnum.optional() });
 const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
 export const dailyQuerySchema = z.object({
-  date: date, shift: shiftEnum.optional(), shiftOvernight: z.coerce.boolean().optional(),
-  blankSeparator: bool.optional(), includeInProgress: bool.optional(),
+  date: date, shift: shiftEnum.optional(), blankSeparator: bool.optional(), includeInProgress: bool.optional(),
 });
 export const nonconformityQuerySchema = z.object({ dateFrom: date.optional(), dateTo: date.optional(), shift: shiftEnum.optional() });
 export const dailyPdfSchema = z.object({
@@ -83,14 +79,8 @@ export const createUserSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome.'),
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,40}$/, 'Login deve ter 3-40 caracteres (letras minúsculas, números, . _ -).'),
   password: pwd, role: roleEnum,
-  shift: shiftEnum.nullable().optional(),
 }).strict();
-export const updateUserSchema = z.object({
-  name: z.string().trim().min(1).optional(),
-  role: roleEnum.optional(),
-  shift: shiftEnum.nullable().optional(),
-  password: pwd.optional(),
-}).strict();
+export const updateUserSchema = z.object({ name: z.string().trim().min(1).optional(), role: roleEnum.optional(), password: pwd.optional() }).strict();
 export const setActiveSchema = z.object({ active: z.boolean() }).strict();
 
 export type CreateChecklistDto = z.infer<typeof createChecklistSchema>;
