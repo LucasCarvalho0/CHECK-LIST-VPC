@@ -18,7 +18,7 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
     <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
       <table className="min-w-full text-sm">
         <thead className="bg-slate-100 text-left text-xs uppercase text-slate-600">
-          <tr>{['Data', 'Hora', 'Turno', 'Chassi', 'Versão', 'Inspetor QA', 'Líder VPC', 'BPC', 'Resultado', 'Status', 'Ações'].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr>
+          <tr>{['Data', 'Hora', 'Turno', 'Chassi', 'Versão', 'Inspetor QA', 'Líder VPC', 'Resultado', 'Status', 'Ações'].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((c) => (
@@ -33,10 +33,9 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
                 {c.isL2 && <span className="ml-1 rounded bg-indigo-100 px-1 text-xs font-bold text-indigo-800">L2</span>}
                 {c.isL3 && <span className="ml-1 rounded bg-emerald-100 px-1 text-xs font-bold text-emerald-800">L3</span>}
               </td>
-              <td className="px-3 py-2">{c.vehicleVersion}</td>
+              <td className="px-3 py-2 font-semibold">{c.vehicleVersion || '—'}</td>
               <td className="px-3 py-2">{c.inspectorQA}</td>
               <td className="px-3 py-2">{c.leaderVPC}</td>
-              <td className="px-3 py-2">{c.bpc}</td>
               <td className="px-3 py-2">{c.auditResult ? <Badge tone={c.auditResult === 'APPROVED' ? 'green' : 'red'}>{resultLabel(c.auditResult)}</Badge> : '—'}{!!c.nokCount && <span className="ml-1 text-xs text-red-700">({c.nokCount} NOK)</span>}</td>
               <td className="px-3 py-2"><Badge tone={c.status === 'FINALIZED' ? 'blue' : c.status === 'CANCELED' ? 'red' : 'yellow'}>{statusLabel[c.status]}</Badge></td>
               <td className="whitespace-nowrap px-3 py-2">

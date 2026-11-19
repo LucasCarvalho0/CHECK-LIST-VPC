@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sese-qa-v3.8';
+const CACHE_NAME = 'sese-qa-v3.9';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [

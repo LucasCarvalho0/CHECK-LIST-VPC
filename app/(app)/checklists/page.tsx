@@ -40,7 +40,6 @@ export default function ChecklistsPage() {
         <label className="text-xs">Resultado<select value={f.auditResult} onChange={set('auditResult')}><option value="">Todos</option><option value="APPROVED">Aprovado</option><option value="REPROVED">Reprovado</option></select></label>
         <label className="text-xs">Inspetor QA<input value={f.inspectorQA} onChange={set('inspectorQA')} /></label>
         <label className="text-xs">Líder VPC<input value={f.leaderVPC} onChange={set('leaderVPC')} /></label>
-        <label className="text-xs">BPC<input value={f.bpc} onChange={set('bpc')} /></label>
         <label className="text-xs">Ordenar<select value={f.order} onChange={set('order')}><option value="desc">Mais recentes</option><option value="asc">Mais antigos</option></select></label>
         <div className="flex items-end gap-2"><Btn variant="dark" onClick={search}>Filtrar</Btn><Btn onClick={() => { setF(init); setApplied(init); setPage(1); }}>Limpar</Btn></div>
       </div>

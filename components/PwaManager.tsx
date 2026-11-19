@@ -81,7 +81,7 @@ export function PwaManager() {
     // 2. Registrar Service Worker SEMPRE (inclusive em modo Standalone)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js?v=3.8')
+        .register('/sw.js?v=3.9')
         .then((reg) => {
           // Força verificação imediata de atualizações
           reg.update();

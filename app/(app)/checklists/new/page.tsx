@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiError } from '@/services/api';
@@ -7,16 +7,47 @@ import { useAuth } from '@/hooks/useAuth';
 import { nowLocalTime, todayLocal, statusLabel, shiftLabel } from '@/lib/format';
 import { Alert, Btn, Card } from '@/components/ui';
 import VehicleFields, { VehicleValues } from '@/components/checklist/VehicleFields';
+import { detectUserShift, detectDefaultInspector, SHIFT_CONFIGS } from '@/lib/shared/shifts';
 
 interface Existing { id: string; status: import('@/types').Status; checklistTime: string; shift: 'FIRST' | 'SECOND' | null }
 
 export default function NewChecklist() {
   const router = useRouter();
   const { user } = useAuth();
-  const [v, setV] = useState<VehicleValues>({
-    chassis: '', vehicleVersion: '', checklistDate: todayLocal(), checklistTime: nowLocalTime(), shift: '', inspectorQA: '', leaderVPC: '', bpc: '',
-    isPCD: false, isL1: false, isL2: false, isL3: false,
+  const [v, setV] = useState<VehicleValues>(() => {
+    const userShift = detectUserShift(user);
+    const defaultInsp = detectDefaultInspector(user);
+    const defaultLeader = userShift ? SHIFT_CONFIGS[userShift].leaderVPC : '';
+
+    return {
+      chassis: '',
+      vehicleVersion: '',
+      checklistDate: todayLocal(),
+      checklistTime: nowLocalTime(),
+      shift: userShift || '',
+      inspectorQA: defaultInsp || (userShift ? SHIFT_CONFIGS[userShift].inspectors[0] : ''),
+      leaderVPC: defaultLeader,
+      bpc: '',
+      isPCD: false,
+      isL1: false,
+      isL2: false,
+      isL3: false,
+    };
   });
+
+  useEffect(() => {
+    if (user && !v.shift) {
+      const userShift = detectUserShift(user);
+      const defaultInsp = detectDefaultInspector(user);
+      const defaultLeader = userShift ? SHIFT_CONFIGS[userShift].leaderVPC : '';
+      setV((prev) => ({
+        ...prev,
+        shift: prev.shift || userShift || '',
+        inspectorQA: prev.inspectorQA || defaultInsp || (userShift ? SHIFT_CONFIGS[userShift].inspectors[0] : ''),
+        leaderVPC: prev.leaderVPC || defaultLeader,
+      }));
+    }
+  }, [user]);
   const [error, setError] = useState<string | null>(null);
   const [dups, setDups] = useState<Existing[] | null>(null);
   const [busy, setBusy] = useState(false);
