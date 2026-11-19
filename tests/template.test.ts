@@ -39,10 +39,10 @@ describe('template do checklist', () => {
     expect(html).toContain('Risco &lt;b&gt;forte&lt;/b&gt;'); // escapado
     expect(html).toMatch(/class="box">X<\/span> 2º Turno/);
   });
-  it('NA aparece somente na tabela de adesivos', () => {
+  it('NA aparece nas tabelas com allowNA habilitado (visual, funcional, software e adesivos)', () => {
     const [p1, p2] = renderChecklistPages(mk('X'), null);
-    expect(p1).not.toContain('<th>NA</th>');
-    expect(count(p2, /<th>NA<\/th>/g)).toBe(1);
+    expect(p1).toContain('<th>NA</th>');
+    expect(count(p2, /<th>NA<\/th>/g)).toBe(3);
   });
   it('planPages calcula folhas e páginas', () => {
     expect(planPages(4, false)).toMatchObject({ contentPages: 12, blankPages: 0, totalPages: 12 });

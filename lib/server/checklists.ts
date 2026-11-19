@@ -48,7 +48,7 @@ export async function createChecklist(dto: CreateChecklistDto, user: AuthUser) {
         isL3: dto.isL3 ?? false,
         createdById: user.id,
         responses: {
-          create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'UNANSWERED' as const })),
+          create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'OK' as const })),
         },
       },
       include,

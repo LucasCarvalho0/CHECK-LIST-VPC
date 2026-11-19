@@ -62,8 +62,13 @@ export function validateForFinalize(c: ChecklistLike, responses: ResponsesMap): 
     else if (r === 'NA' && !item.allowNA) e.push({ field: item.code, message: `NA não é permitido no item: ${item.label}` });
   }
 
-  req('firmwareVersion', c.firmwareVersion, 'Informe a Versão Firmware identificada.');
-  req('canbusVersion', c.canbusVersion, 'Informe a Versão Canbus identificada.');
+  const isPcd = c.vehicleVersion === 'PCD' || Boolean((c as Record<string, unknown>).isPCD);
+  if (!isPcd && responses['SOF_02']?.response !== 'NA') {
+    req('firmwareVersion', c.firmwareVersion, 'Informe a Versão Firmware identificada.');
+  }
+  if (!isPcd && responses['SOF_03']?.response !== 'NA') {
+    req('canbusVersion', c.canbusVersion, 'Informe a Versão Canbus identificada.');
+  }
 
   if (!c.auditResult) e.push({ field: 'auditResult', message: 'Selecione o resultado geral da auditoria (APROVADO/REPROVADO).' });
   if (c.auditResult === 'REPROVED') req('nonConformityDescription', c.nonConformityDescription, 'Descreva a não conformidade (obrigatório quando REPROVADO).');

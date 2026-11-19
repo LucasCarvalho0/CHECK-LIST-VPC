@@ -43,8 +43,8 @@ function fromServer(c: Checklist): { form: Form; items: Record<string, ItemState
     repairDate: nz(c.repairDate), repairTime: nz(c.repairTime),
   };
   const items: Record<string, ItemState> = {};
-  for (const i of ALL_ITEMS) items[i.code] = { response: 'UNANSWERED', observation: '' };
-  for (const r of c.responses) items[r.itemCode] = { response: r.response, observation: nz(r.observation) };
+  for (const i of ALL_ITEMS) items[i.code] = { response: 'OK', observation: '' };
+  for (const r of c.responses) items[r.itemCode] = { response: r.response === 'UNANSWERED' ? 'OK' : r.response, observation: nz(r.observation) };
   return { form, items };
 }
 

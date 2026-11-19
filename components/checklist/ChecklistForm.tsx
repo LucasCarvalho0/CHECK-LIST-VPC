@@ -45,8 +45,8 @@ function fromServer(c: Checklist): { form: Form; items: Record<string, ItemState
     repairDate: nz(c.repairDate), repairTime: nz(c.repairTime),
   };
   const items: Record<string, ItemState> = {};
-  for (const i of ALL_ITEMS) items[i.code] = { response: 'UNANSWERED', observation: '' };
-  for (const r of c.responses) items[r.itemCode] = { response: r.response, observation: nz(r.observation) };
+  for (const i of ALL_ITEMS) items[i.code] = { response: 'OK', observation: '' };
+  for (const r of c.responses) items[r.itemCode] = { response: r.response === 'UNANSWERED' ? 'OK' : r.response, observation: nz(r.observation) };
   return { form, items };
 }
 
@@ -203,21 +203,59 @@ export default function ChecklistForm({ id }: { id: string }) {
 
   const itemRows = (key: SectionKey) => {
     const sec = SECTIONS.find((s) => s.key === key)!;
+    const isPcd = form.vehicleVersion === 'PCD' || form.isPCD;
     return (
       <div className="space-y-2">
-        {sec.items.map((i) => (
-          <ItemRow
-            key={i.code} code={i.code} label={i.label} allowNA={sec.allowNA}
-            response={items[i.code].response} observation={items[i.code].observation}
-            onResponse={(v) => setItem(i.code, { response: v })} onObservation={(v) => setItem(i.code, { observation: v })}
-            readOnly={readOnly} invalid={errFields.includes(i.code)}
-            extra={i.valueField ? (
-              <Field label={`${i.label} identificada`} required error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}>
-                <input value={form[i.valueField]} disabled={readOnly} onChange={(e) => setField(i.valueField!, e.target.value)} />
-              </Field>
-            ) : undefined}
-          />
-        ))}
+        {['FUNCTIONAL', 'SOFTWARE', 'VISUAL'].includes(key) && !readOnly && (
+          <div className="flex justify-end pb-1">
+            <button
+              type="button"
+              onClick={() => {
+                sec.items.forEach((item) => setItem(item.code, { response: 'NA' }));
+                if (key === 'SOFTWARE') {
+                  setField('firmwareVersion', 'N/A');
+                  setField('canbusVersion', 'N/A');
+                }
+              }}
+              className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded px-2.5 py-1 transition"
+              title="Marca todos os itens desta seção como NA (ex: veículo PCD sem multimídia)"
+            >
+              Marcar seção como NA (PCD)
+            </button>
+          </div>
+        )}
+        {sec.items.map((i) => {
+          const isNa = items[i.code]?.response === 'NA';
+          const reqSoftware = !isPcd && !isNa;
+          return (
+            <ItemRow
+              key={i.code} code={i.code} label={i.label} allowNA={sec.allowNA}
+              response={items[i.code]?.response ?? 'OK'} observation={items[i.code]?.observation ?? ''}
+              onResponse={(v) => {
+                setItem(i.code, { response: v });
+                if (v === 'NA' && i.valueField && !form[i.valueField]) {
+                  setField(i.valueField, 'N/A');
+                }
+              }}
+              onObservation={(v) => setItem(i.code, { observation: v })}
+              readOnly={readOnly} invalid={errFields.includes(i.code)}
+              extra={i.valueField ? (
+                <Field
+                  label={`${i.label} identificada`}
+                  required={reqSoftware}
+                  error={errFields.includes(i.valueField) ? 'Informe a versão' : undefined}
+                >
+                  <input
+                    value={form[i.valueField]}
+                    disabled={readOnly || isNa || isPcd}
+                    placeholder={isNa || isPcd ? 'N/A (Não aplicável em PCD)' : ''}
+                    onChange={(e) => setField(i.valueField!, e.target.value)}
+                  />
+                </Field>
+              ) : undefined}
+            />
+          );
+        })}
       </div>
     );
   };

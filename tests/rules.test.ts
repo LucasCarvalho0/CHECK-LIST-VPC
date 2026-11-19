@@ -14,8 +14,8 @@ describe('catálogo', () => {
     const count = (s: string) => ALL_ITEMS.filter((i) => i.section === s).length;
     expect([count('VISUAL'), count('FUNCTIONAL'), count('SOFTWARE'), count('STICKER'), count('AUDIT')]).toEqual([12, 9, 3, 4, 2]);
   });
-  it('NA só existe na seção de adesivos', () => {
-    expect([...new Set(ALL_ITEMS.filter((i) => i.allowNA).map((i) => i.section))]).toEqual(['STICKER']);
+  it('permite NA em itens de inspeção (visual, funcional, software e adesivos)', () => {
+    expect([...new Set(ALL_ITEMS.filter((i) => i.allowNA).map((i) => i.section))]).toEqual(['VISUAL', 'FUNCTIONAL', 'SOFTWARE', 'STICKER']);
   });
 });
 
@@ -40,22 +40,31 @@ describe('validação de finalização', () => {
     expect(errors.some((e) => e.field === 'shift')).toBe(true);
     expect(errors.some((e) => e.field === 'auditResult')).toBe(true);
   });
-  it('exige versões de firmware e Canbus', () => {
+  it('exige versões de firmware e Canbus quando veículo comum não tem NA', () => {
     const errors = validateForFinalize({ ...baseChecklist(), firmwareVersion: ' ', canbusVersion: null }, allOk());
     expect(errors.map((e) => e.field)).toEqual(expect.arrayContaining(['firmwareVersion', 'canbusVersion']));
+  });
+  it('não exige versões de firmware e Canbus quando for PCD ou marcado como NA', () => {
+    const r = allOk();
+    r['SOF_02'] = { response: 'NA' };
+    r['SOF_03'] = { response: 'NA' };
+    const pcdErrors = validateForFinalize({ ...baseChecklist(), vehicleVersion: 'PCD', firmwareVersion: null, canbusVersion: null }, r);
+    expect(pcdErrors.filter((e) => e.field === 'firmwareVersion' || e.field === 'canbusVersion')).toEqual([]);
   });
   it('REPROVADO exige descrição da não conformidade', () => {
     const c = { ...baseChecklist(), auditResult: 'REPROVED' as const };
     expect(validateForFinalize(c, allOk()).map((e) => e.field)).toContain('nonConformityDescription');
     expect(validateForFinalize({ ...c, nonConformityDescription: 'Risco no display', repairStatus: 'NOT_APPLICABLE', repairObservation: 'Aguardando peça' }, allOk())).toEqual([]);
   });
-  it('NA não é aceito fora da seção de adesivos', () => {
+  it('NA é aceito nas seções com allowNA habilitado (visual, funcional, software, adesivo)', () => {
     const r = allOk();
     r['VIS_01'] = { response: 'NA' };
-    expect(validateForFinalize(baseChecklist(), r).map((e) => e.field)).toContain('VIS_01');
-    const r2 = allOk();
-    r2['ADE_01'] = { response: 'NA' };
-    expect(validateForFinalize(baseChecklist(), r2)).toEqual([]);
+    r['FUN_01'] = { response: 'NA' };
+    r['SOF_01'] = { response: 'NA' };
+    r['SOF_02'] = { response: 'NA' };
+    r['SOF_03'] = { response: 'NA' };
+    r['ADE_01'] = { response: 'NA' };
+    expect(validateForFinalize({ ...baseChecklist(), vehicleVersion: 'PCD', firmwareVersion: null, canbusVersion: null }, r)).toEqual([]);
   });
   it('item NOK exige decisão explícita sobre o reparo e, se informado, os dados completos', () => {
     const r = allOk();

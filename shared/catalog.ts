@@ -25,7 +25,7 @@ export const SECTIONS: SectionDef[] = [
     key: 'VISUAL',
     title: 'INSPEÇÃO VISUAL',
     page: 1,
-    allowNA: false,
+    allowNA: true,
     items: [
       { code: 'VIS_01', label: 'Frame (moldura) correto para o modelo.' },
       { code: 'VIS_02', label: 'Frame corretamente encaixado.' },
@@ -45,7 +45,7 @@ export const SECTIONS: SectionDef[] = [
     key: 'FUNCTIONAL',
     title: 'INSPEÇÃO FUNCIONAL',
     page: 2,
-    allowNA: false,
+    allowNA: true,
     items: [
       { code: 'FUN_01', label: 'Equipamento liga corretamente.' },
       { code: 'FUN_02', label: 'Função USB testada.' },
@@ -62,7 +62,7 @@ export const SECTIONS: SectionDef[] = [
     key: 'SOFTWARE',
     title: 'INSPEÇÃO DE SOFTWARE',
     page: 2,
-    allowNA: false,
+    allowNA: true,
     items: [
       { code: 'SOF_01', label: 'Firmware Atualizado' },
       { code: 'SOF_02', label: 'Versão Firmware', valueField: 'firmwareVersion' },
