@@ -52,6 +52,10 @@ export class ChecklistsService {
           inspectorQA: emptyToNull(dto.inspectorQA) ?? null,
           leaderVPC: emptyToNull(dto.leaderVPC) ?? null,
           bpc: emptyToNull(dto.bpc) ?? null,
+          isPCD: dto.isPCD ?? false,
+          isL1: dto.isL1 ?? false,
+          isL2: dto.isL2 ?? false,
+          isL3: dto.isL3 ?? false,
           createdById: user.id,
           responses: {
             create: ALL_ITEMS.map((i) => ({ itemCode: i.code, section: i.section, itemLabelSnapshot: i.label, response: 'UNANSWERED' as const })),
