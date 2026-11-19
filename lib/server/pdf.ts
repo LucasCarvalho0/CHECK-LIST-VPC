@@ -27,16 +27,34 @@ export function getLogo(): string | null {
 export const buildHtml = (list: PrintableChecklist[], blankSeparator = false) =>
   renderDocumentHtml(list, { blankSeparator, logo: getLogo() });
 
+function findChromiumPath(): string | undefined {
+  if (process.env.CHROMIUM_PATH && existsSync(process.env.CHROMIUM_PATH)) {
+    return process.env.CHROMIUM_PATH;
+  }
+  const candidates = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  ];
+  return candidates.find((p) => existsSync(p));
+}
+
 export async function getBrowser(): Promise<Browser> {
   if (g.__browser?.isConnected()) return g.__browser;
-  try {
-    const { chromium } = await import('playwright');
-    g.__browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox'] });
-    return g.__browser;
-  } catch (e) {
-    console.error('Falha ao iniciar o Chromium:', (e as Error).message);
-    throw new HttpError(503, 'Geração de PDF indisponível: instale o Chromium (npm run browsers:install) ou defina CHROMIUM_PATH.');
-  }
+  const { chromium } = await import('playwright');
+  const execPath = findChromiumPath();
+  g.__browser = await chromium.launch({
+    executablePath: execPath,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
+  return g.__browser;
 }
 
 export async function closeBrowser() {
@@ -44,15 +62,25 @@ export async function closeBrowser() {
   g.__browser = undefined;
 }
 
-export async function htmlToPdf(html: string): Promise<Buffer> {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
+export async function htmlToPdf(html: string): Promise<Buffer | null> {
   try {
-    await page.setContent(html, { waitUntil: 'load' });
-    const pdf = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '0', right: '0', bottom: '0', left: '0' }, preferCSSPageSize: true });
-    return Buffer.from(pdf);
-  } finally {
-    await page.close();
+    const browser = await getBrowser();
+    const page = await browser.newPage();
+    try {
+      await page.setContent(html, { waitUntil: 'load' });
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+        preferCSSPageSize: true,
+      });
+      return Buffer.from(pdf);
+    } finally {
+      await page.close();
+    }
+  } catch (err) {
+    console.warn('Chromium não disponível para renderização direta:', (err as Error).message);
+    return null;
   }
 }
 
@@ -60,24 +88,63 @@ export async function checklistPdf(id: string) {
   const row = await prisma.checklist.findFirst({ where: { id, deletedAt: null }, include: { responses: true } });
   if (!row) throw new HttpError(404, 'Checklist não encontrado.');
   const c = serializeChecklist(row) as PrintableChecklist;
-  return { buffer: await htmlToPdf(buildHtml([c])), filename: `checklist-${c.chassis}-${c.checklistDate}.pdf` };
+  const html = buildHtml([c]);
+  const pdfBuffer = await htmlToPdf(html);
+
+  if (pdfBuffer) {
+    return {
+      buffer: pdfBuffer,
+      filename: `checklist-${c.chassis}-${c.checklistDate}.pdf`,
+      contentType: 'application/pdf',
+      isHtml: false,
+    };
+  }
+
+  return {
+    buffer: Buffer.from(html, 'utf-8'),
+    filename: `checklist-${c.chassis}-${c.checklistDate}.html`,
+    contentType: 'text/html; charset=utf-8',
+    isHtml: true,
+  };
 }
 
 export async function dailyPdf(q: { date: string; shift?: 'FIRST' | 'SECOND'; blankSeparator?: boolean; includeInProgress?: boolean; ids?: string[] }) {
   const rows = await dailyChecklists(q);
   if (!rows.length) throw new HttpError(404, 'Nenhum checklist encontrado para os filtros informados.');
   const list = rows.map((r) => serializeChecklist(r) as PrintableChecklist);
+  const html = buildHtml(list, !!q.blankSeparator);
+  const pages = planPages(list.length, !!q.blankSeparator);
+  const pdfBuffer = await htmlToPdf(html);
+
+  if (pdfBuffer) {
+    return {
+      buffer: pdfBuffer,
+      filename: `checklists-${q.date}${q.shift ? '-' + (q.shift === 'FIRST' ? '1turno' : '2turno') : ''}${q.blankSeparator ? '-duplex' : ''}.pdf`,
+      contentType: 'application/pdf',
+      pages,
+      isHtml: false,
+    };
+  }
+
   return {
-    buffer: await htmlToPdf(buildHtml(list, !!q.blankSeparator)),
-    filename: `checklists-${q.date}${q.shift ? '-' + (q.shift === 'FIRST' ? '1turno' : '2turno') : ''}${q.blankSeparator ? '-duplex' : ''}.pdf`,
-    pages: planPages(list.length, !!q.blankSeparator),
+    buffer: Buffer.from(html, 'utf-8'),
+    filename: `checklists-${q.date}${q.shift ? '-' + (q.shift === 'FIRST' ? '1turno' : '2turno') : ''}${q.blankSeparator ? '-duplex' : ''}.html`,
+    contentType: 'text/html; charset=utf-8',
+    pages,
+    isHtml: true,
   };
 }
 
-export function pdfResponse(buffer: Buffer, filename: string, download: boolean, extra: Record<string, string> = {}) {
+export function pdfResponse(
+  buffer: Buffer,
+  filename: string,
+  download: boolean,
+  extra: Record<string, string> = {},
+  contentType = 'application/pdf',
+) {
   return new Response(new Uint8Array(buffer), {
     headers: {
-      'Content-Type': 'application/pdf',
+      'Content-Type': contentType,
       'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename="${filename}"`,
       'Content-Length': String(buffer.length),
       ...extra,

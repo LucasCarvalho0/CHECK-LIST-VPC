@@ -191,7 +191,16 @@ export default function ChecklistForm({ id }: { id: string }) {
     setBusy(true);
     try {
       if (!readOnly) await flush();
-      downloadBlob(await api.blob(`/checklists/${id}/pdf?download=1`), `checklist-${form?.chassis}-${form?.checklistDate}.pdf`);
+      const blob = await api.blob(`/checklists/${id}/pdf?download=1`);
+      if (blob.type.includes('html')) {
+        const url = URL.createObjectURL(blob);
+        setPreview(url);
+        setTimeout(() => {
+          (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print();
+        }, 300);
+      } else {
+        downloadBlob(blob, `checklist-${form?.chassis}-${form?.checklistDate}.pdf`);
+      }
     } catch (e) { flash('err', e instanceof ApiError ? e.message : 'Erro ao gerar o PDF.'); } finally { setBusy(false); }
   }
   const closePreview = () => { if (preview) URL.revokeObjectURL(preview); setPreview(null); };

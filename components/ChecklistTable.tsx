@@ -10,7 +10,18 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
   const { user } = useAuth();
   const canEdit = (c: Checklist) => user && user.role !== 'VIEWER' && c.status !== 'CANCELED' && (c.status === 'IN_PROGRESS' || user.role === 'ADMIN');
   async function pdf(c: Checklist) {
-    try { downloadBlob(await api.blob(`/checklists/${c.id}/pdf?download=1`), `checklist-${c.chassis}-${c.checklistDate}.pdf`); }
+    try {
+      const blob = await api.blob(`/checklists/${c.id}/pdf?download=1`);
+      if (blob.type.includes('html')) {
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+        if (win) {
+          win.onload = () => win.print();
+        }
+      } else {
+        downloadBlob(blob, `checklist-${c.chassis}-${c.checklistDate}.pdf`);
+      }
+    }
     catch (e) { onError?.((e as Error).message); }
   }
   if (!rows.length) return <div className="rounded border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">Nenhum checklist encontrado para os filtros atuais.</div>;

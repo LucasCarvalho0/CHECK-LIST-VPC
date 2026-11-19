@@ -193,7 +193,16 @@ export default function ChecklistForm({ id }: { id: string }) {
     setBusy(true);
     try {
       if (!readOnly) await flush();
-      downloadBlob(await api.blob(`/checklists/${id}/pdf?download=1`), `checklist-${form?.chassis}-${form?.checklistDate}.pdf`);
+      const blob = await api.blob(`/checklists/${id}/pdf?download=1`);
+      if (blob.type.includes('html')) {
+        const url = URL.createObjectURL(blob);
+        setPreview(url);
+        setTimeout(() => {
+          (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print();
+        }, 300);
+      } else {
+        downloadBlob(blob, `checklist-${form?.chassis}-${form?.checklistDate}.pdf`);
+      }
     } catch (e) { flash('err', e instanceof ApiError ? e.message : 'Erro ao gerar o PDF.'); } finally { setBusy(false); }
   }
   const closePreview = () => { if (preview) URL.revokeObjectURL(preview); setPreview(null); };
@@ -379,12 +388,14 @@ export default function ChecklistForm({ id }: { id: string }) {
 
       {preview && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-3" role="dialog" aria-label="Pré-visualização de impressão">
-          <div className="mb-2 flex gap-2">
-            <Btn variant="primary" onClick={() => (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print()}>Imprimir</Btn>
-            <Btn onClick={downloadPdf}>Baixar PDF</Btn>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Btn variant="primary" onClick={() => (document.getElementById('pdf-frame') as HTMLIFrameElement | null)?.contentWindow?.print()}>
+              Imprimir / Salvar em PDF
+            </Btn>
+            <span className="text-xs text-white/80 hidden sm:inline">Dica: na tela de impressão, você pode selecionar sua impressora ou escolher "Salvar como PDF".</span>
             <Btn className="ml-auto" onClick={closePreview}>Fechar</Btn>
           </div>
-          <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded bg-white" title="Prévia do PDF" />
+          <iframe id="pdf-frame" src={preview} className="w-full flex-1 rounded bg-white shadow-lg" title="Prévia do Checklist" />
         </div>
       )}
     </div>

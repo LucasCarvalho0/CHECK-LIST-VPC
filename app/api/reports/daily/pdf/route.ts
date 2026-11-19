@@ -8,8 +8,8 @@ import { dailyPdfSchema } from '@/lib/server/schemas';
 
 export const POST = handle(async (req) => {
   await authenticate(req);
-  const { buffer, filename, pages } = await dailyPdf(await readBody(req, dailyPdfSchema));
+  const { buffer, filename, pages, contentType } = await dailyPdf(await readBody(req, dailyPdfSchema));
   return pdfResponse(buffer, filename, new URL(req.url).searchParams.has('download'), {
     'X-Total-Pages': String(pages.totalPages), 'X-Total-Vehicles': String(pages.vehicles),
-  });
+  }, contentType);
 });
