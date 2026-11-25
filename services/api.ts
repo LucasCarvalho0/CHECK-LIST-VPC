@@ -20,7 +20,7 @@ async function raw(path: string, init: RequestInit = {}): Promise<Response> {
   try {
     res = await fetch(`${API}${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, 'Sem conexão com o servidor.');
+    throw new ApiError(0, 'Erro de conexão. Verifique sua internet e tente novamente.');
   }
   if (!res.ok) {
     let body: any = null;
@@ -30,7 +30,10 @@ async function raw(path: string, init: RequestInit = {}): Promise<Response> {
       if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
     }
     const m = body?.message;
-    throw new ApiError(res.status, Array.isArray(m) ? m.join('; ') : m || `Erro ${res.status}`, body);
+    if (res.status >= 500) {
+      throw new ApiError(res.status, 'Erro de conexão. Verifique sua internet e tente novamente.', body);
+    }
+    throw new ApiError(res.status, Array.isArray(m) ? m.join('; ') : m || 'Erro de conexão.', body);
   }
   return res;
 }

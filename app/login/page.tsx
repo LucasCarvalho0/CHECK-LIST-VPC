@@ -15,10 +15,38 @@ export default function LoginPage() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setBusy(true); setError(null);
-    try { await login(username, password); router.replace('/'); }
-    catch (err) { setError(err instanceof ApiError ? err.message : 'Erro ao entrar.'); }
-    finally { setBusy(false); }
+    setBusy(true);
+    setError(null);
+
+    // Tentativa com retry automático transparente (caso o banco de dados esteja acordando de suspensão)
+    const maxAttempts = 2;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await login(username, password);
+        router.replace('/');
+        return;
+      } catch (err: any) {
+        const isAuthError = err instanceof ApiError && (err.status === 401 || err.status === 429);
+
+        // Se a senha estiver errada ou atingiu limite de tentativas, para imediatamente e exibe a mensagem correta
+        if (isAuthError) {
+          setError(err.message || 'Usuário ou senha inválidos.');
+          setBusy(false);
+          return;
+        }
+
+        // Se for a última tentativa, exibe erro de conexão amigável
+        if (attempt === maxAttempts) {
+          setError('Erro de conexão. Verifique sua internet e tente novamente.');
+          setBusy(false);
+          return;
+        }
+
+        // Se falhou por timeout / cold start do servidor, aguarda 1.5s enquanto o servidor termina de ligar e tenta novamente de forma automática
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+    }
+    setBusy(false);
   }
 
   return (
