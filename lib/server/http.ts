@@ -20,8 +20,8 @@ export function handle<C = any>(fn: Handler<C>) {
         const errors = e.issues.map((i) => ({ field: i.path.join('.'), message: i.message }));
         return Response.json({ statusCode: 400, message: errors.map((x) => x.message).join('; '), errors }, { status: 400 });
       }
-      console.error('Erro inesperado:', (e as Error)?.message, e); // sem dados do checklist nos logs
-      return Response.json({ statusCode: 500, message: 'Erro interno do servidor.', errorDetail: (e as Error)?.message || String(e) }, { status: 500 });
+      console.error('Erro inesperado:', (e as Error)?.message); // sem dados do checklist nos logs
+      return Response.json({ statusCode: 500, message: 'Erro interno do servidor.' }, { status: 500 });
     }
   };
 }

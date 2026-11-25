@@ -7,14 +7,19 @@ export type RoleName = 'ADMIN' | 'OPERATOR' | 'VIEWER';
 export interface AuthUser { id: string; name: string; username: string; role: RoleName }
 
 const secret = () => {
-  const s = process.env.JWT_SECRET;
+  const s = (process.env.JWT_SECRET || '').replace(/["'\r\n]/g, '').trim();
   if (!s || s.length < 16) throw new Error('Defina JWT_SECRET (mínimo 16 caracteres) no arquivo .env');
   return new TextEncoder().encode(s);
 };
 
+const jwtExpiresIn = () => {
+  const v = (process.env.JWT_EXPIRES_IN || '12h').replace(/["'\r\n\s]/g, '').trim();
+  return v || '12h';
+};
+
 export const signToken = (userId: string) =>
   new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setSubject(userId).setIssuedAt()
-    .setExpirationTime(process.env.JWT_EXPIRES_IN || '12h').sign(secret());
+    .setExpirationTime(jwtExpiresIn()).sign(secret());
 
 /**
  * Autentica a requisição (Bearer) e confere perfil. Sempre consulta o banco:
