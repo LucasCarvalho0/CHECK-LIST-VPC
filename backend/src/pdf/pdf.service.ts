@@ -136,14 +136,6 @@ export class PdfService implements OnModuleDestroy {
       isHtml: true,
     };
   }
-    const list = rows.map((r) => serializeChecklist(r) as PrintableChecklist);
-    const pages = planPages(list.length, !!q.blankSeparator);
-    return {
-      buffer: await this.htmlToPdf(this.html(list, !!q.blankSeparator)),
-      filename: `checklists-${q.date}${q.shift ? '-' + (q.shift === 'FIRST' ? '1turno' : '2turno') : ''}${q.blankSeparator ? '-duplex' : ''}.pdf`,
-      pages,
-    };
-  }
 
   async onModuleDestroy() {
     await this.browser?.close().catch(() => undefined);

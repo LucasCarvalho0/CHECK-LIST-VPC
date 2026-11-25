@@ -25,7 +25,8 @@ const maybe = (name: string, fn: () => Promise<void>) => it(name, async () => { 
 
 describe('PDF (Chromium)', () => {
   maybe('PDF individual: 3 páginas A4', async () => {
-    const pdf = await PDFDocument.load(await svc.htmlToPdf(svc.html([mk('V1')])));
+    const buf = await svc.htmlToPdf(svc.html([mk('V1')]));
+    const pdf = await PDFDocument.load(buf!);
     expect(pdf.getPageCount()).toBe(3);
     const { width, height } = pdf.getPage(0).getSize();
     expect(Math.round(width)).toBe(595); // A4 em pontos
@@ -33,8 +34,10 @@ describe('PDF (Chromium)', () => {
   });
   maybe('PDF em lote: 3 páginas por veículo e separadores em branco', async () => {
     const list = [mk('V1'), mk('V2'), mk('V3'), mk('V4')];
-    expect((await PDFDocument.load(await svc.htmlToPdf(svc.html(list)))).getPageCount()).toBe(12);
-    expect((await PDFDocument.load(await svc.htmlToPdf(svc.html(list, true)))).getPageCount()).toBe(15);
+    const buf1 = await svc.htmlToPdf(svc.html(list));
+    const buf2 = await svc.htmlToPdf(svc.html(list, true));
+    expect((await PDFDocument.load(buf1!)).getPageCount()).toBe(12);
+    expect((await PDFDocument.load(buf2!)).getPageCount()).toBe(15);
   });
   maybe('nenhuma página tem conteúdo cortado (mesmo com textos longos)', async () => {
     const browser = await (svc as any).getBrowser();
