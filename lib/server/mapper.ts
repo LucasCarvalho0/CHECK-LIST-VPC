@@ -30,7 +30,7 @@ export function toRuleInput(serialized: any): { checklist: ChecklistLike; respon
 export const emptyToNull = <T>(v: T): T | null => (typeof v === 'string' && v.trim() === '' ? null : v);
 
 /** Data/hora atual no fuso da planta (APP_TIMEZONE) */
-export function nowInTz(tz = process.env.APP_TIMEZONE || 'America/Sao_Paulo') {
+export function nowInTz(tz = (process.env.APP_TIMEZONE || 'America/Sao_Paulo').replace(/[\r\n\s'"]+/g, '')) {
   const p = Object.fromEntries(
     new Intl.DateTimeFormat('en-CA', {
       timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
