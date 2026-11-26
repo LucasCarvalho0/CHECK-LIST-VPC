@@ -81,7 +81,18 @@ export async function createChecklist(dto: CreateChecklistDto, user: AuthUser) {
 
 // ---------- consulta ----------
 export async function getChecklist(id: string) {
-  const cl = await prisma.checklist.findFirst({ where: { id, deletedAt: null }, include });
+  const cl = await prisma.checklist.findFirst({
+    where: { id, deletedAt: null },
+    include: {
+      responses: true,
+      auditLogs: {
+        where: { action: 'CANCEL' },
+        include: { user: { select: { name: true, username: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
+  });
   if (!cl) throw new HttpError(404, 'Checklist não encontrado.');
   return serializeChecklist(cl);
 }
@@ -242,7 +253,11 @@ export async function cancelChecklist(id: string, reason: string, user: AuthUser
     await tx.auditLog.create({ data: { checklistId: id, userId: user.id, action: 'CANCEL', changes: { reason, statusAnterior: cl.status } } });
     return u;
   });
-  return serializeChecklist(updated);
+  return serializeChecklist({
+    ...updated,
+    canceledByName: user.name,
+    canceledByUsername: user.username,
+  });
 }
 
 export function checklistHistory(id: string) {

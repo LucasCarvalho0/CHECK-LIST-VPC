@@ -15,6 +15,10 @@ export interface Checklist {
   auditResult: AuditResult | null; nonConformityDescription: string | null; repairStatus: RepairStatus | null; repairObservation: string | null;
   repairInspectorQA: string | null; repairLeaderVPC: string | null; repairDate: string | null; repairTime: string | null;
   status: Status; updatedAt: string; createdAt: string; finalizedAt: string | null; nokCount?: number; responses: ItemResponse[];
+  cancelReason?: string | null;
+  canceledAt?: string | null;
+  canceledByName?: string | null;
+  canceledByUsername?: string | null;
 }
 
 export interface Paged<T> { data: T[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }

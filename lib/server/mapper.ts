@@ -5,9 +5,12 @@ export const fromDate = (d: Date | null | undefined) => (d ? d.toISOString().sli
 
 /** Converte o registro Prisma (datas como Date) para o formato da API (datas AAAA-MM-DD). */
 export function serializeChecklist(c: any) {
-  const { responses, ...rest } = c;
+  const { responses, auditLogs, ...rest } = c;
+  const cancelAudit = auditLogs?.find((a: any) => a.action === 'CANCEL');
   return {
     ...rest,
+    canceledByName: c.canceledByName ?? cancelAudit?.user?.name ?? null,
+    canceledByUsername: c.canceledByUsername ?? cancelAudit?.user?.username ?? null,
     checklistDate: fromDate(c.checklistDate),
     repairDate: fromDate(c.repairDate),
     responses: (responses ?? []).map((r: any) => ({

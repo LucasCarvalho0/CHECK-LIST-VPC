@@ -20,7 +20,7 @@ type Form = VehicleValues & {
 };
 type ItemState = { response: ResponseValue; observation: string };
 type Pending = { fields: Partial<Form>; items: Record<string, Partial<ItemState>> };
-type Tab = 'INFO' | SectionKey | 'REPAIR';
+type Tab = 'INFO' | SectionKey | 'REPAIR' | 'CANCELED';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'INFO', label: '1. Informação do veículo' },
@@ -69,6 +69,12 @@ export default function ChecklistForm({ id }: { id: string }) {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('IN_PROGRESS');
+  const [cancelInfo, setCancelInfo] = useState<{
+    reason: string | null;
+    date: string | null;
+    userName: string | null;
+    username: string | null;
+  }>({ reason: null, date: null, userName: null, username: null });
   const [form, setForm] = useState<Form | null>(null);
   const [items, setItems] = useState<Record<string, ItemState>>({});
   const [tab, setTab] = useState<Tab>('INFO');
@@ -87,7 +93,17 @@ export default function ChecklistForm({ id }: { id: string }) {
     try {
       const c = await api.get<Checklist>(`/checklists/${id}`);
       const s = fromServer(c);
-      setForm(s.form); setItems(s.items); setStatus(c.status); updatedAt.current = c.updatedAt; pending.current = empty();
+      setForm(s.form);
+      setItems(s.items);
+      setStatus(c.status);
+      setCancelInfo({
+        reason: c.cancelReason ?? null,
+        date: c.canceledAt ?? null,
+        userName: c.canceledByName ?? null,
+        username: c.canceledByUsername ?? null,
+      });
+      updatedAt.current = c.updatedAt;
+      pending.current = empty();
       setLoaded(true);
     } catch (e) { setLoadError(e instanceof ApiError ? e.message : 'Erro ao carregar.'); }
   }, [id]);
@@ -188,7 +204,16 @@ export default function ChecklistForm({ id }: { id: string }) {
     setBusy(true);
     try {
       const c = await api.post<Checklist>(`/checklists/${id}/cancel`, { reason });
-      setStatus(c.status); updatedAt.current = c.updatedAt; flash('ok', 'Checklist cancelado.');
+      setStatus(c.status);
+      setCancelInfo({
+        reason: c.cancelReason ?? reason,
+        date: c.canceledAt ?? new Date().toISOString(),
+        userName: c.canceledByName ?? user?.name ?? null,
+        username: c.canceledByUsername ?? user?.username ?? null,
+      });
+      updatedAt.current = c.updatedAt;
+      setTab('CANCELED');
+      flash('ok', 'Checklist cancelado.');
     } catch (e) { flash('err', e instanceof ApiError ? e.message : 'Erro ao cancelar.'); }
     finally { setBusy(false); }
   }
@@ -270,6 +295,13 @@ export default function ChecklistForm({ id }: { id: string }) {
   const ind = { idle: ['', 'text-slate-500'], saving: ['Salvando...', 'text-amber-700'], saved: ['Salvo', 'text-green-700'], error: ['Erro ao salvar', 'text-red-700'] }[saveState];
   const ngPresent = hasNonConformity(toLike(form), toMap(items));
 
+  const activeTabs = useMemo(() => {
+    if (status === 'CANCELED') {
+      return [...TABS, { key: 'CANCELED' as Tab, label: '8. Cancelamento' }];
+    }
+    return TABS;
+  }, [status]);
+
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-6">
       <div className="mb-3 flex flex-wrap items-center gap-3">
@@ -287,15 +319,73 @@ export default function ChecklistForm({ id }: { id: string }) {
       )}
       {status === 'FINALIZED' && user?.role === 'ADMIN' && <div className="mb-3"><Alert type="warn">Checklist finalizado: toda correção fica registrada no histórico (usuário, data e campos alterados). Use “Salvar alterações”.</Alert></div>}
       {status === 'FINALIZED' && user?.role === 'OPERATOR' && <div className="mb-3"><Alert type="warn">Checklist finalizado: somente leitura. Solicite a um administrador para corrigir.</Alert></div>}
-      {status === 'CANCELED' && <div className="mb-3"><Alert type="err">Checklist cancelado.</Alert></div>}
+      
+      {status === 'CANCELED' && (
+        <div className="mb-4 rounded-xl border border-red-300 bg-red-50/80 p-4 text-red-950 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1 min-w-[280px]">
+              <span className="text-2xl select-none mt-0.5">🚫</span>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-bold text-red-800 text-base">Checklist Cancelado</h3>
+                  {cancelInfo.date && (
+                    <span className="text-xs text-red-600 font-medium">
+                      ({new Date(cancelInfo.date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })})
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 rounded-lg border border-red-200 bg-white p-3 text-sm shadow-2xs">
+                  <span className="text-xs font-bold uppercase tracking-wider text-red-700 block mb-1">
+                    Motivo do cancelamento:
+                  </span>
+                  <p className="font-semibold text-slate-800 whitespace-pre-wrap leading-relaxed">
+                    {cancelInfo.reason || 'Nenhum motivo informado no momento do cancelamento.'}
+                  </p>
+                </div>
+                {cancelInfo.userName && (
+                  <p className="mt-2 text-xs text-red-700 font-medium">
+                    Cancelado por: <strong className="text-slate-800">{cancelInfo.userName}</strong> {cancelInfo.username ? `(@${cancelInfo.username})` : ''}
+                  </p>
+                )}
+              </div>
+            </div>
+            {tab !== 'CANCELED' && (
+              <button
+                type="button"
+                onClick={() => setTab('CANCELED')}
+                className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100 whitespace-nowrap shadow-xs transition-colors"
+              >
+                Ir para aba Cancelamento →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mb-3 flex flex-wrap gap-1" role="tablist">
-        {TABS.map((t) => (
-          <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-            className={`rounded px-3 py-2 text-sm ${tab === t.key ? 'bg-nissan text-white' : 'bg-white border border-slate-300 hover:bg-slate-50'} ${showErrors && errors.some((e) => tabOf(e.field) === t.key) ? 'ring-2 ring-amber-400' : ''}`}>
-            {t.label}
-          </button>
-        ))}
+        {activeTabs.map((t) => {
+          const isCanceledTab = t.key === 'CANCELED';
+          const isSelected = tab === t.key;
+          let btnStyle = 'bg-white border border-slate-300 hover:bg-slate-50';
+          if (isSelected) {
+            btnStyle = isCanceledTab ? 'bg-red-700 text-white font-bold shadow-xs' : 'bg-nissan text-white font-semibold';
+          } else if (isCanceledTab) {
+            btnStyle = 'bg-red-50 text-red-700 border border-red-300 hover:bg-red-100 font-bold';
+          }
+          return (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={isSelected}
+              onClick={() => setTab(t.key)}
+              className={`rounded px-3 py-2 text-sm transition-colors ${btnStyle} ${
+                showErrors && errors.some((e) => tabOf(e.field) === t.key) ? 'ring-2 ring-amber-400' : ''
+              }`}
+            >
+              {isCanceledTab ? '🚫 ' : ''}{t.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_16rem]">
@@ -361,10 +451,67 @@ export default function ChecklistForm({ id }: { id: string }) {
               </div>
             </Card>
           )}
+          {tab === 'CANCELED' && (
+            <Card className="border-red-200 bg-white space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-red-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl select-none">🚫</span>
+                  <div>
+                    <h2 className="text-lg font-bold text-red-800">Cancelamento do Checklist</h2>
+                    <p className="text-xs text-slate-500">Registro oficial do cancelamento deste veículo no sistema.</p>
+                  </div>
+                </div>
+                <Badge tone="red" className="text-xs font-bold px-2.5 py-1">CHECKLIST CANCELADO</Badge>
+              </div>
+
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">
+                  Motivo informado no cancelamento
+                </span>
+                <div className="rounded-xl border-2 border-red-200 bg-red-50/50 p-4 shadow-2xs">
+                  <p className="text-sm font-semibold text-slate-800 whitespace-pre-wrap leading-relaxed">
+                    {cancelInfo.reason || 'Nenhum motivo informado no momento do cancelamento.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100 text-sm">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <span className="text-xs font-semibold text-slate-500 block mb-0.5">Data e Hora do Cancelamento</span>
+                  <span className="font-medium text-slate-800">
+                    {cancelInfo.date
+                      ? new Date(cancelInfo.date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+                      : '—'}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <span className="text-xs font-semibold text-slate-500 block mb-0.5">Cancelado por</span>
+                  <span className="font-medium text-slate-800">
+                    {cancelInfo.userName || (cancelInfo.username ? `@${cancelInfo.username}` : 'Administrador')}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <span className="text-xs font-semibold text-slate-500 block mb-0.5">Chassi</span>
+                  <span className="font-mono font-bold text-slate-800">{form?.chassis}</span>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <span className="text-xs font-semibold text-slate-500 block mb-0.5">Versão / Modelo</span>
+                  <span className="font-medium text-slate-800">{form?.vehicleVersion || '—'}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
+                <span className="text-base select-none">ℹ️</span>
+                <span>
+                  Este checklist foi cancelado e tem caráter somente informativo no sistema. Conforme a regra da fábrica, o cancelamento não é incluído no PDF impresso.
+                </span>
+              </div>
+            </Card>
+          )}
 
           <div className="mt-4 flex justify-between">
-            <Btn onClick={() => setTab(TABS[Math.max(0, TABS.findIndex((t) => t.key === tab) - 1)].key)} disabled={tab === 'INFO'}>← Anterior</Btn>
-            <Btn onClick={() => setTab(TABS[Math.min(TABS.length - 1, TABS.findIndex((t) => t.key === tab) + 1)].key)} disabled={tab === 'REPAIR'}>Próxima →</Btn>
+            <Btn onClick={() => setTab(activeTabs[Math.max(0, activeTabs.findIndex((t) => t.key === tab) - 1)].key)} disabled={tab === activeTabs[0].key}>← Anterior</Btn>
+            <Btn onClick={() => setTab(activeTabs[Math.min(activeTabs.length - 1, activeTabs.findIndex((t) => t.key === tab) + 1)].key)} disabled={tab === activeTabs[activeTabs.length - 1].key}>Próxima →</Btn>
           </div>
         </div>
 

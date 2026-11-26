@@ -22,7 +22,8 @@ const maybe = (name: string, fn: () => Promise<void>) =>
 
 describe('PDF (Chromium)', () => {
   maybe('PDF individual: 3 páginas A4', async () => {
-    const pdf = await PDFDocument.load(await htmlToPdf(buildHtml([mk('V1')])));
+    const pdfBuf = (await htmlToPdf(buildHtml([mk('V1')])))!;
+    const pdf = await PDFDocument.load(pdfBuf);
     expect(pdf.getPageCount()).toBe(3);
     const { width, height } = pdf.getPage(0).getSize();
     expect(Math.round(width)).toBe(595); // A4 em pontos
@@ -30,8 +31,10 @@ describe('PDF (Chromium)', () => {
   });
   maybe('PDF em lote: 3 páginas por veículo e separadores em branco', async () => {
     const list = [mk('V1'), mk('V2'), mk('V3'), mk('V4')];
-    expect((await PDFDocument.load(await htmlToPdf(buildHtml(list)))).getPageCount()).toBe(12);
-    expect((await PDFDocument.load(await htmlToPdf(buildHtml(list, true)))).getPageCount()).toBe(15);
+    const b1 = (await htmlToPdf(buildHtml(list)))!;
+    const b2 = (await htmlToPdf(buildHtml(list, true)))!;
+    expect((await PDFDocument.load(b1)).getPageCount()).toBe(12);
+    expect((await PDFDocument.load(b2)).getPageCount()).toBe(15);
   });
   maybe('nenhuma página tem conteúdo cortado (mesmo com textos longos)', async () => {
     const page = await (await getBrowser()).newPage();

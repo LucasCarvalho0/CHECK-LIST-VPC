@@ -48,7 +48,16 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
               <td className="px-3 py-2">{c.inspectorQA}</td>
               <td className="px-3 py-2">{c.leaderVPC}</td>
               <td className="px-3 py-2">{c.auditResult ? <Badge tone={c.auditResult === 'APPROVED' ? 'green' : 'red'}>{resultLabel(c.auditResult)}</Badge> : '—'}{!!c.nokCount && <span className="ml-1 text-xs text-red-700">({c.nokCount} NOK)</span>}</td>
-              <td className="px-3 py-2"><Badge tone={c.status === 'FINALIZED' ? 'blue' : c.status === 'CANCELED' ? 'red' : 'yellow'}>{statusLabel[c.status]}</Badge></td>
+              <td className="px-3 py-2">
+                <div className="flex flex-col items-start gap-1">
+                  <Badge tone={c.status === 'FINALIZED' ? 'blue' : c.status === 'CANCELED' ? 'red' : 'yellow'}>{statusLabel[c.status]}</Badge>
+                  {c.status === 'CANCELED' && c.cancelReason && (
+                    <span className="text-[11px] font-medium text-red-600 truncate max-w-[140px] cursor-help" title={`Motivo do cancelamento: ${c.cancelReason}`}>
+                      {c.cancelReason}
+                    </span>
+                  )}
+                </div>
+              </td>
               <td className="whitespace-nowrap px-3 py-2">
                 <Link href={`/checklists/${c.id}`} className="mr-2 underline">Abrir</Link>
                 {canEdit(c) && <Link href={`/checklists/${c.id}`} className="mr-2 underline">Editar</Link>}

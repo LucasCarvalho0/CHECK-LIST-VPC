@@ -32,9 +32,9 @@ export function Field({ label, required, children, hint, error, className = '' }
   );
 }
 
-export function Badge({ children, tone = 'gray' }: { children: ReactNode; tone?: 'gray' | 'green' | 'red' | 'yellow' | 'blue' }) {
+export function Badge({ children, tone = 'gray', className = '', title }: { children: ReactNode; tone?: 'gray' | 'green' | 'red' | 'yellow' | 'blue'; className?: string; title?: string }) {
   const t = { gray: 'bg-slate-100 text-slate-700', green: 'bg-green-100 text-green-800', red: 'bg-red-100 text-red-800', yellow: 'bg-amber-100 text-amber-800', blue: 'bg-sky-100 text-sky-800' }[tone];
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${t}`}>{children}</span>;
+  return <span title={title} className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${t} ${className}`}>{children}</span>;
 }
 
 export function Alert({ type, children }: { type: 'ok' | 'err' | 'warn'; children: ReactNode }) {
