@@ -161,6 +161,12 @@ export default function ChecklistForm({ id }: { id: string }) {
 
   const errFields = useMemo(() => (showErrors ? errors.map((e) => e.field) : []), [errors, showErrors]);
   const nokList = useMemo(() => ALL_ITEMS.filter((i) => items[i.code]?.response === 'NOK'), [items]);
+  const activeTabs = useMemo(() => {
+    if (status === 'CANCELED') {
+      return [...TABS, { key: 'CANCELED' as Tab, label: '8. Cancelamento' }];
+    }
+    return TABS;
+  }, [status]);
 
   // ----- ações -----
   const flash = (type: 'ok' | 'err', text: string) => { setMsg({ type, text }); window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -294,13 +300,6 @@ export default function ChecklistForm({ id }: { id: string }) {
 
   const ind = { idle: ['', 'text-slate-500'], saving: ['Salvando...', 'text-amber-700'], saved: ['Salvo', 'text-green-700'], error: ['Erro ao salvar', 'text-red-700'] }[saveState];
   const ngPresent = hasNonConformity(toLike(form), toMap(items));
-
-  const activeTabs = useMemo(() => {
-    if (status === 'CANCELED') {
-      return [...TABS, { key: 'CANCELED' as Tab, label: '8. Cancelamento' }];
-    }
-    return TABS;
-  }, [status]);
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-6">
