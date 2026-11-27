@@ -59,7 +59,13 @@ export default function ChecklistTable({ rows, onError }: { rows: Checklist[]; o
                 </div>
               </td>
               <td className="whitespace-nowrap px-3 py-2">
-                <Link href={`/checklists/${c.id}`} className="mr-2 underline">Abrir</Link>
+                <Link
+                  href={`/checklists/${c.id}`}
+                  className="mr-2 underline font-medium text-nissan hover:text-red-700"
+                  title={c.status === 'CANCELED' ? 'Ver detalhes e motivo do cancelamento' : 'Abrir checklist'}
+                >
+                  {c.status === 'CANCELED' ? 'Abrir (Motivo)' : 'Abrir'}
+                </Link>
                 {canEdit(c) && <Link href={`/checklists/${c.id}`} className="mr-2 underline">Editar</Link>}
                 <Btn className="!px-2 !py-1 text-xs" onClick={() => pdf(c)}>PDF</Btn>
               </td>

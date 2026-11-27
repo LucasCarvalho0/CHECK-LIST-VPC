@@ -102,6 +102,9 @@ export default function ChecklistForm({ id }: { id: string }) {
         userName: c.canceledByName ?? null,
         username: c.canceledByUsername ?? null,
       });
+      if (c.status === 'CANCELED') {
+        setTab('CANCELED');
+      }
       updatedAt.current = c.updatedAt;
       pending.current = empty();
       setLoaded(true);
