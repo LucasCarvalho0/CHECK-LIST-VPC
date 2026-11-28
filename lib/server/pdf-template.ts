@@ -35,7 +35,7 @@ body { font-family: Arial, "Liberation Sans", Helvetica, sans-serif; font-size: 
 .sec { font-weight: bold; font-size: 11pt; text-align: center; margin: 5mm 0 1.5mm; text-transform: uppercase; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 th, td { border: 0.25mm solid #888; padding: 1.4mm 1.8mm; vertical-align: middle; overflow-wrap: anywhere; word-break: break-word; }
-th { background: #e4e4e4; font-weight: bold; font-size: 9pt; text-align: center; }
+th { background: #e4e4e4; font-weight: bold; font-size: 9pt; text-align: center; white-space: nowrap; }
 td.c { text-align: center; }
 td.obs { min-height: 8mm; font-size: 8.5pt; }
 tr.item td { height: 9mm; }
@@ -59,7 +59,7 @@ const footer = (c: PrintableChecklist) =>
 function itemsTable(c: PrintableChecklist, key: SectionKey) {
   const sec = SECTIONS.find((s) => s.key === key)!;
   const map = new Map(c.responses.map((r) => [r.itemCode, r]));
-  const widths = sec.allowNA ? [40, 6, 6, 6, 42] : [46, 7, 7, 40];
+  const widths = sec.allowNA ? [37, 9, 9, 9, 36] : [43, 9, 9, 39];
   const cols = widths.map((w) => `<col style="width:${w}%">`).join('');
   const head = `<tr><th>Item de Verificação</th><th>OK</th><th>NOK</th>${sec.allowNA ? '<th>NA</th>' : ''}<th>Observação</th></tr>`;
   const rows = sec.items.map((i) => {
