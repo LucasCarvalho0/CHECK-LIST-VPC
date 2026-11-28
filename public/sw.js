@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sese-qa-v5.0';
+const CACHE_NAME = 'sese-qa-v5.1';
 const OFFLINE_URL = '/offline.html';
 const CANONICAL_HOST = 'nissan-checklist-multimidia.vercel.app';
 

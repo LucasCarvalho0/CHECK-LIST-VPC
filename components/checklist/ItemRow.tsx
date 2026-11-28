@@ -23,16 +23,17 @@ export default function ItemRow({
           {invalid && <div className="mt-1 text-xs font-semibold text-amber-800">Resposta obrigatória pendente</div>}
           {extra && <div className="mt-2 max-w-xs">{extra}</div>}
         </div>
-        <div className="flex gap-2" role="radiogroup" aria-label={label}>
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 shrink-0" role="radiogroup" aria-label={label}>
           {options.map((o) => {
             const sel = response === o;
             return (
               <button
                 key={o} type="button" role="radio" aria-checked={sel} disabled={readOnly}
                 onClick={() => onResponse(sel ? 'UNANSWERED' : (o as ResponseValue))}
-                className={`min-w-[3.5rem] rounded border px-3 py-2 text-sm font-bold disabled:opacity-60 ${sel ? styles[o].on : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
+                className={`min-w-[4rem] whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-bold select-none disabled:opacity-60 transition-colors ${sel ? styles[o].on : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
               >
-                {sel ? '☒' : '☐'} {styles[o].label}
+                <span>{sel ? '☒' : '☐'}</span>
+                <span>{styles[o].label}</span>
               </button>
             );
           })}

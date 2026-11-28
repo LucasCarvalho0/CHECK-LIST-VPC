@@ -23,7 +23,7 @@ export default function LoginPage() {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         await login(username, password);
-        router.replace('/');
+        window.location.replace('/');
         return;
       } catch (err: any) {
         const isAuthError = err instanceof ApiError && (err.status === 401 || err.status === 429);

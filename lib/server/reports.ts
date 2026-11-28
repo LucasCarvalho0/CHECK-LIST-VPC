@@ -28,7 +28,7 @@ export async function summary(q: Filter) {
       { OR: [{ repairStatus: null }, { repairStatus: 'NOK' }] },
     ],
   };
-  const [total, inProgress, finalized, approved, reproved, pendingRepair, nokItems] = await prisma.$transaction([
+  const [total, inProgress, finalized, approved, reproved, pendingRepair, nokItems] = await Promise.all([
     prisma.checklist.count({ where }),
     prisma.checklist.count({ where: { ...where, status: 'IN_PROGRESS' } }),
     prisma.checklist.count({ where: { ...where, status: 'FINALIZED' } }),

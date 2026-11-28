@@ -102,9 +102,6 @@ export default function ChecklistForm({ id }: { id: string }) {
         userName: c.canceledByName ?? null,
         username: c.canceledByUsername ?? null,
       });
-      if (c.status === 'CANCELED') {
-        setTab('CANCELED');
-      }
       updatedAt.current = c.updatedAt;
       pending.current = empty();
       setLoaded(true);
@@ -432,7 +429,7 @@ export default function ChecklistForm({ id }: { id: string }) {
                   {([['OK', 'OK'], ['NOK', 'NOK'], ['NOT_APPLICABLE', 'Não se aplica']] as const).map(([v, l]) => (
                     <button key={v} type="button" role="radio" aria-checked={form.repairStatus === v} disabled={readOnly}
                       onClick={() => setField('repairStatus', form.repairStatus === v ? '' : v)}
-                      className={`rounded border px-4 py-2 text-sm font-bold disabled:opacity-60 ${form.repairStatus === v ? 'bg-slate-800 text-white' : 'bg-white border-slate-300'}`}>
+                      className={`whitespace-nowrap shrink-0 rounded border px-4 py-2 text-sm font-bold disabled:opacity-60 ${form.repairStatus === v ? 'bg-slate-800 text-white' : 'bg-white border-slate-300'}`}>
                       {form.repairStatus === v ? '☒' : '☐'} {l}
                     </button>
                   ))}

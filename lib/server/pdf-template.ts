@@ -82,8 +82,6 @@ function page1(c: PrintableChecklist, logo: string | null) {
     <tr><td class="lbl">Data</td><td>${brDate(c.checklistDate)}</td><td class="lbl">Hora</td><td>${esc(c.checklistTime)}</td></tr>
     <tr><td class="lbl">Turno</td><td colspan="3"><span class="opt">${box(c.shift === 'FIRST')} 1º Turno</span><span class="opt">${box(c.shift === 'SECOND')} 2º Turno</span></td></tr>
     <tr><td class="lbl">Inspetor QA</td><td>${esc(c.inspectorQA)}</td><td class="lbl">Líder VPC</td><td>${esc(c.leaderVPC)}</td></tr>
-    <tr><td class="lbl">BPC</td><td colspan="3">${esc(c.bpc)}</td></tr>
-    <tr><td class="lbl">Tipo</td><td colspan="3"><span class="opt">${box(!!c.isPCD)} PCD</span><span class="opt">${box(!!c.isL1)} L1</span><span class="opt">${box(!!c.isL2)} L2</span><span class="opt">${box(!!c.isL3)} L3</span></td></tr>
   </table>`;
   return `<section class="page">${header(logo, true)}${info}${itemsTable(c, 'VISUAL')}${footer(c)}</section>`;
 }
